@@ -1,0 +1,7 @@
+{
+  "name": "sd15_txt2img",
+  "version": "1.0",
+  "description": "Ein einfacher Text-zu-Bild-Workflow für Stable Diffusion 1.5.",
+  "nodes": [],
+  "links": []
+}

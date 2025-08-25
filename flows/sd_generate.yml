@@ -1,0 +1,17 @@
+name: Stable Diffusion Image Generation
+description: A workflow to generate an image using Stable Diffusion and upscale it.
+variables:
+  PROMPT: "a beautiful landscape"
+  IMG_OUTPUT: "artifacts/generated_image.png"
+  UPSCALE_OUTPUT: "artifacts/generated_image_upscaled.png"
+
+steps:
+  - name: txt2img_plan
+    command: ["python", "services/sd_service.py", "--prompt", "${PROMPT}", "--output", "${IMG_OUTPUT}"]
+    artifacts_out: ["${IMG_OUTPUT}"]
+
+  - name: upscale_plan
+    command: ["python", "services/upscale_service.py", "--input", "${IMG_OUTPUT}", "--output", "${UPSCALE_OUTPUT}"]
+    dependencies: ["txt2img_plan"]
+    artifacts_in: ["${IMG_OUTPUT}"]
+    artifacts_out: ["${UPSCALE_OUTPUT}"]

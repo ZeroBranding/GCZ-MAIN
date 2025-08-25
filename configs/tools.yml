@@ -1,0 +1,48 @@
+# Defines the endpoints for all tools available to the GCZ Agent.
+# The ToolsRegistry class loads this file on initialization.
+
+tool_endpoints:
+  # --- ComfyUI / Stable Diffusion ---
+  - name: "sd.txt2img"
+    method: "POST"
+    base_url: "${COMFYUI_URL:http://127.0.0.1:8188}"
+    path: "/prompt"
+    timeout_s: 120
+
+  - name: "sd.history"
+    method: "GET"
+    base_url: "${COMFYUI_URL:http://127.0.0.1:8188}"
+    path: "/history/{prompt_id}"
+    timeout_s: 10
+
+  - name: "sd.view"
+    method: "GET"
+    base_url: "${COMFYUI_URL:http://127.0.0.1:8188}"
+    path: "/view" # Query params will be added in the call
+    timeout_s: 60
+
+  # --- In-Process Python Tools ---
+  - name: "youtube.upload"
+    method: "PYTHON"
+    module: "services.youtube_service"
+    function: "upload_to_youtube"
+
+  - name: "instagram.upload"
+    method: "PYTHON"
+    module: "services.instagram_service"
+    function: "upload_to_instagram" # Assuming a single entry point
+
+  - name: "tiktok.upload"
+    method: "PYTHON"
+    module: "services.tiktok_service"
+    function: "upload_to_tiktok"
+
+  - name: "email.draft"
+    method: "PYTHON"
+    module: "services.email_service"
+    function: "draft_reply"
+
+  - name: "email.send"
+    method: "PYTHON"
+    module: "services.email_service"
+    function: "confirm_and_send"

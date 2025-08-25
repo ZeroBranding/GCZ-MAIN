@@ -1,0 +1,24 @@
+workflows:
+  audio_to_image_with_llm:
+    steps:
+      - agent: whisper
+        action: transcribe
+        params:
+          input_file: "{{audio_path}}"
+      - agent: llm
+        action: ask_llm
+        params:
+          model: "gpt-oss-20b"
+          prompt: "Based on the following text, create a creative and detailed prompt for an image generation model. Text: '{{whisper_output}}'"
+      - agent: sd
+        action: generate_image
+        params:
+          prompt: "{{llm_output}}"
+          output_file: "output.png"
+      - agent: mcp
+        action: send_task
+        params:
+          task_data:
+            type: "image_generation_with_llm"
+            original_text: "{{whisper_output}}"
+            generated_prompt: "{{llm_output}}"

@@ -1,0 +1,24 @@
+enabled: false
+
+baresip:
+  executable: "external/baresip/baresip.exe"
+  config_path: "configs/baresip"
+  accounts_file: "configs/baresip/accounts"
+  log_level: "info"
+
+asr:
+  model: "whisper-1"
+  language: "en"
+
+tts:
+  model: "tts-1"
+  voice: "alloy"
+
+llm:
+  model: "gpt-4"
+  prompt: "You are a helpful assistant."
+
+call_handling:
+  max_retries: 3
+  timeout: 30 # in seconds
+  record_segment_duration: 5 # in seconds

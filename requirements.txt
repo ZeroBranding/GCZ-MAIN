@@ -1,0 +1,43 @@
+# Core
+python-dotenv==0.21.0
+requests==2.31.0
+pydantic==2.8.2 # Bleibt auf v2
+httpx==0.27.0 # Pin auf eine ältere, kompatible Version
+pyyaml==6.0.1
+openai==1.35.13
+python-telegram-bot==21.0.1
+
+# Linting & Formatting
+ruff==0.1.6
+black==23.11.0
+mypy==1.7.0
+pre-commit==3.5.0
+
+# Social Media Services
+google-api-python-client==2.108.0
+google-auth-httplib2==0.1.1
+google-auth-oauthlib==1.1.0
+# instagrapi==1.16.31 # Deaktiviert wegen Pydantic v1-Konflikt
+Pillow==10.1.0
+
+# Speech
+faster-whisper==1.0.3
+ctranslate2==4.3.1
+onnxruntime==1.18.1
+
+# Voice & ASR
+# TTS==0.22.0 # Entfernt, da inkompatibel und wahrscheinlich durch XTTS ersetzt
+
+# Testing
+pytest==7.4.3
+
+# Monitoring & Scheduling
+prometheus-client==0.17.1
+fastapi==0.111.0 # Update auf eine moderne Version, die pydantic v2 unterstützt
+apscheduler==3.10.1
+psutil==5.9.8 # Hinzugefügt für System-Monitoring
+
+# Document Automation
+pypdf==4.2.0 # Ersetzt das veraltete PyPDF2
+pytesseract==0.3.10
+pdf2image==1.16.3

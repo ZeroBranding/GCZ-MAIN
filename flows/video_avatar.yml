@@ -1,0 +1,31 @@
+name: Video Avatar Generation
+description: A workflow to generate a video avatar from text.
+variables:
+  TEXT: "Hallo Welt, dies ist ein Test."
+  AUDIO_OUTPUT: "artifacts/output.wav"
+  VIDEO_OUTPUT: "artifacts/avatar.mp4"
+  UPSCALE_OUTPUT: "artifacts/avatar_upscaled.mp4"
+  FINAL_OUTPUT: "artifacts/final_video.mp4"
+
+steps:
+  - name: tts_plan
+    command: ["python", "services/tts_service.py", "--text", "${TEXT}", "--output", "${AUDIO_OUTPUT}"]
+    artifacts_out: ["${AUDIO_OUTPUT}"]
+
+  - name: avatar_plan
+    command: ["python", "services/avatar_service.py", "--audio", "${AUDIO_OUTPUT}", "--output", "${VIDEO_OUTPUT}"]
+    dependencies: ["tts_plan"]
+    artifacts_in: ["${AUDIO_OUTPUT}"]
+    artifacts_out: ["${VIDEO_OUTPUT}"]
+
+  - name: upscale_plan
+    command: ["python", "services/upscale_service.py", "--input", "${VIDEO_OUTPUT}", "--output", "${UPSCALE_OUTPUT}"]
+    dependencies: ["avatar_plan"]
+    artifacts_in: ["${VIDEO_OUTPUT}"]
+    artifacts_out: ["${UPSCALE_OUTPUT}"]
+
+  - name: mux_plan
+    command: ["ffmpeg", "-i", "${UPSCALE_OUTPUT}", "-i", "${AUDIO_OUTPUT}", "-c:v", "copy", "-c:a", "aac", "${FINAL_OUTPUT}"]
+    dependencies: ["upscale_plan", "tts_plan"]
+    artifacts_in: ["${UPSCALE_OUTPUT}", "${AUDIO_OUTPUT}"]
+    artifacts_out: ["${FINAL_OUTPUT}"]

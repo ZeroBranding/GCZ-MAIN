@@ -1,0 +1,16 @@
+# Settings for IMAP/SMTP email services.
+confirm_before_send: true
+
+gmail:
+  imap_host: "imap.gmail.com"
+  smtp_host: "smtp.gmail.com"
+  smtp_port: 587
+  user_env: "GMAIL_USER"
+  password_env: "GMAIL_APP_PASSWORD"
+
+icloud:
+  imap_host: "imap.mail.me.com"
+  smtp_host: "smtp.mail.me.com"
+  smtp_port: 587
+  user_env: "ICLOUD_USER"
+  password_env: "ICLOUD_APP_PASSWORD"

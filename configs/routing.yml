@@ -1,0 +1,15 @@
+# Configuration for routing tasks to different models and services.
+
+# LLM backends for core agentic tasks.
+llm_planner: "gpt-oss:20b"
+llm_reviewer: "gcz-reviewer"
+llm_docs: "gcz-docs"
+llm_coder: "codegemma"
+
+# Text-to-Speech and Speech-to-Text models.
+tts_backend: "piper"
+asr_model: "medium-int8"
+
+# Stable Diffusion / ComfyUI connection details.
+sd_host: "127.0.0.1"
+sd_port: 8188

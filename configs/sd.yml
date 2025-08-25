@@ -1,0 +1,9 @@
+# Stable Diffusion (ComfyUI) settings.
+
+# Toggle DirectML for AMD GPUs on Windows. Set to false for Nvidia.
+use_directml: true
+
+# --- Paths ---
+# It's best to use absolute paths.
+base_models_path: "C:/path/to/ComfyUI/models/checkpoints"
+workflows_path: "C:/path/to/project/flows/sd_workflows"

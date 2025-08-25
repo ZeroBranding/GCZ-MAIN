@@ -1,0 +1,7 @@
+{
+  "name": "german-code-zero-ai",
+  "version": "0.1.0",
+  "description": "Local-first automation for Windows",
+  "private": true,
+  "license": "MIT"
+}

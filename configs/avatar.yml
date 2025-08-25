@@ -1,0 +1,11 @@
+# Configuration for the talking avatar generation (SadTalker).
+
+# --- Paths ---
+# Absolute paths are recommended. Use environment variables in .env for portability.
+# Example: sadtalker_checkpoints: "${PATH_SADTLK_CKPT}"
+sadtalker_checkpoints: "C:/path/to/SadTalker/checkpoints"
+esrgan_model_path: "C:/path/to/Real-ESRGAN/weights/RealESRGAN_x4plus.pth"
+
+# --- Generation Settings ---
+fps: 25
+bitrate: "5000k"

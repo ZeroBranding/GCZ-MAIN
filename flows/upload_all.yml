@@ -1,0 +1,25 @@
+name: Upload All Platforms
+description: A workflow to sanitize a caption and plan uploads to TikTok, Instagram, and YouTube.
+variables:
+  CAPTION: "Dies ist mein Untertitel"
+  VIDEO_PATH: "artifacts/final_video.mp4"
+
+steps:
+  - name: sanitize_caption
+    command: ["python", "scripts/sanitize_text.py", "--text", "${CAPTION}"]
+    artifacts_out: ["artifacts/sanitized_caption.txt"]
+
+  - name: plan_tiktok
+    command: ["python", "services/tiktok_service.py", "--plan", "--caption_file", "artifacts/sanitized_caption.txt", "--video", "${VIDEO_PATH}"]
+    dependencies: ["sanitize_caption"]
+    artifacts_in: ["artifacts/sanitized_caption.txt", "${VIDEO_PATH}"]
+
+  - name: plan_instagram
+    command: ["python", "services/instagram_service.py", "--plan", "--caption_file", "artifacts/sanitized_caption.txt", "--video", "${VIDEO_PATH}"]
+    dependencies: ["sanitize_caption"]
+    artifacts_in: ["artifacts/sanitized_caption.txt", "${VIDEO_PATH}"]
+    
+  - name: plan_youtube
+    command: ["python", "services/youtube_service.py", "--plan", "--caption_file", "artifacts/sanitized_caption.txt", "--video", "${VIDEO_PATH}"]
+    dependencies: ["sanitize_caption"]
+    artifacts_in: ["artifacts/sanitized_caption.txt", "${VIDEO_PATH}"]

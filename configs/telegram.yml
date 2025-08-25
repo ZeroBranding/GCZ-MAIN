@@ -1,0 +1,10 @@
+# Telegram Bot configuration.
+
+# The bot token is loaded securely from the .env file.
+# Do NOT hardcode it here.
+# The value here is just a placeholder for validation and will be overwritten.
+bot_token: "placeholder_from_env"
+
+# List of user IDs who are authorized to interact with the bot.
+admin_ids:
+  - 123456789 # Replace with your actual Telegram User ID
