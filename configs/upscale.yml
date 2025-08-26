@@ -1,0 +1,34 @@
+# Upscale Service Configuration
+presets:
+  default_scale: 4
+  unsharp: false
+  
+# Model configurations
+models:
+  RealESRGAN_x2:
+    scale: 2
+    description: "RealESRGAN 2x upscaler"
+    file: "RealESRGAN_x2.pth"
+    
+  RealESRGAN_x4:
+    scale: 4
+    description: "RealESRGAN 4x upscaler (default)"
+    file: "RealESRGAN_x4.pth"
+    
+  ESRGAN_x4:
+    scale: 4
+    description: "Original ESRGAN 4x upscaler"
+    file: "ESRGAN_x4.pth"
+
+# Processing settings
+processing:
+  max_image_size: 4096
+  tile_size: 512
+  overlap: 32
+  
+# Server settings (can be overridden by environment)
+server:
+  default_url: "127.0.0.1:8188"
+  timeout: 120
+  retry_count: 3
+  retry_delay: 1.0
