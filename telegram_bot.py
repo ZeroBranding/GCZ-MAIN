@@ -13,6 +13,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+from telegram import Bot
 from telegram.ext import ApplicationBuilder
 
 import core.env
@@ -159,6 +160,37 @@ async def system_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     await update.message.reply_text(message)
 
 
+# --- Autosend Queue Consumer ---
+from core.queues import telegram_autosend_queue
+
+async def autosend_consumer(bot: Bot):
+    """
+    Waits for messages on the autosend queue and sends them to the specified chat.
+    """
+    logger.info("Starting Telegram autosend consumer...")
+    while True:
+        try:
+            item = await telegram_autosend_queue.get()
+            logger.info(f"Got item from autosend queue: {item.get('type')}")
+
+            chat_id = item.get('chat_id')
+            if not chat_id:
+                logger.warning("No chat_id in autosend queue item. Skipping.")
+                continue
+
+            if item.get('type') == 'photo':
+                await bot.send_photo(chat_id=chat_id, photo=item.get('bytes'), caption=item.get('caption'))
+            elif item.get('type') == 'video':
+                await bot.send_video(chat_id=chat_id, video=item.get('bytes'), caption=item.get('caption'))
+            elif item.get('type') == 'text':
+                await bot.send_message(chat_id=chat_id, text=item.get('text'))
+
+            telegram_autosend_queue.task_done()
+
+        except Exception as e:
+            logger.error(f"Error in autosend consumer: {e}", exc_info=True)
+
+
 async def main() -> None:
     """Startet den Bot und alle asynchronen Services."""
     logger.info("Starting Telegram Bot...")
@@ -177,6 +209,10 @@ async def main() -> None:
 
     # --- Build Application ---
     app = ApplicationBuilder().token(bot_token).build()
+
+    # --- Start Core Background Tasks ---
+    asyncio.create_task(autosend_consumer(app.bot))
+    logger.info("Autosend consumer task started.")
 
     # --- Register Handlers ---
     register_handlers(app)

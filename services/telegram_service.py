@@ -81,14 +81,68 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     """
     await update.message.reply_html(help_text)
 
+import subprocess
+
 async def clear_memory_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Clears the conversation history for the user."""
     user_id = str(update.effective_user.id)
     memory.clear_history(user_id)
     await update.message.reply_text("Mein Gedächtnis für unsere Konversation wurde gelöscht.")
 
+# --- Health & Version Handlers ---
+
+async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """A simple health check command that replies with OK."""
+    await update.message.reply_text("OK")
+
+async def version_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Replies with the current Git commit hash."""
+    try:
+        # Execute the git command to get the short commit hash
+        git_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+        await update.message.reply_text(f"Version: {git_hash}")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        logger.error("Failed to get git version hash. Is git installed and is this a git repository?")
+        await update.message.reply_text("Version: unknown")
+
+
+from core.queues import telegram_autosend_queue
 
 # --- Email Command Handlers ---
+
+async def autosend_test_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    A test command to verify the autosend queue mechanism.
+    Generates an image and puts it on the queue to be sent by the consumer.
+    """
+    if not sd_service:
+        await update.message.reply_text("Bildgenerierungs-Dienst ist nicht verfügbar.")
+        return
+
+    chat_id = update.effective_chat.id
+    prompt = "A robot testing a message queue"
+
+    await update.message.reply_text(f"⏳ Teste Autosend-Hook mit Prompt: '{prompt}'...")
+    try:
+        image_bytes = await asyncio.to_thread(sd_service.txt2img, prompt=prompt)
+
+        # Create the message for the queue
+        message = {
+            "type": "photo",
+            "chat_id": chat_id,
+            "bytes": image_bytes,
+            "caption": f"Autosend-Test erfolgreich!\nPrompt: '{prompt}'"
+        }
+
+        # Put the message on the queue
+        await telegram_autosend_queue.put(message)
+
+        await update.message.reply_text("✅ Test-Nachricht wurde in die Autosend-Queue gelegt. Der Consumer sollte sie gleich senden.")
+
+    except Exception as e:
+        logger.error(f"Error in /autosend_test command: {e}", exc_info=True)
+        await update.message.reply_text(f"Fehler beim Testen des Autosend-Hooks: {e}")
+
 
 async def mail_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Lists unread emails."""
@@ -340,6 +394,9 @@ def register_handlers(app: Application):
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("clear", clear_memory_command))
+    app.add_handler(CommandHandler("health", health_command))
+    app.add_handler(CommandHandler("version", version_command))
+    app.add_handler(CommandHandler("autosend_test", autosend_test_command))
 
     # Email handlers
     app.add_handler(CommandHandler("mail_list", mail_list))
