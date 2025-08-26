@@ -1,12 +1,10 @@
 import pytest
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch, MagicMock
 
 import os
 import sys
 
-# We need to modify the path to import from the app modules
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Set a dummy token for initialization
 os.environ["TELEGRAM_BOT_TOKEN"] = "123456:ABC-DEF1234567890"

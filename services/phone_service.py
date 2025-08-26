@@ -3,7 +3,7 @@ import logging
 import subprocess
 from typing import Optional
 
-from core.config import get_settings
+from core.config import load_config
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,6 @@ from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from prometheus_client import start_http_server
 import re
-import subprocess
 
 from telegram import Update # Korrekter Import für neuere Versionen
 from telegram.ext import (
@@ -17,40 +16,88 @@ from telegram.ext import (
 from telegram import Bot
 from telegram.ext import ApplicationBuilder
 
-from core.config import get_settings
+import core.env
+from core.errors import EnvError
 from core.logging import logger
+from services.telegram_service import register_handlers
+from agents.meta_agent import MetaAgent
 from core.security import RBACService, Role
-from core.monitoring import start_metrics_server, GRAPH_GOALS_TOTAL
-from core.memory import Memory
+from core.monitoring import MonitoringService
+from services.sd_service import get_sd_service
+from services.anim_service import get_anim_service
 
 # Import LangGraph integration
-from ai.graph.run import start_graph  # Direct graph entry point
+from ai.graph.run import process_telegram_command
+from ai import start_graph  # Direct graph entry point
 
 # Initialize RBAC Service
 rbac = RBACService()
 
-# Initialize Memory
-memory = Memory()
+# Initialize Monitoring
+monitoring = MonitoringService()
+# asyncio.create_task(monitoring.start()) # Entfernt, da es einen RuntimeError verursacht
 
-# Service singletons are initialized within the graph nodes where they are needed.
+# Initialize Services using the singleton getter
+sd_service = get_sd_service()
+anim_service = get_anim_service()
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Sends a welcome message."""
-    await update.message.reply_html(
-        rf"Willkommen zum German Code Zero AI Bot, {update.effective_user.mention_html()}!",
-    )
+class NLUDispatcher:
+    def __init__(self):
+        self.intents = {
+            "generate_image": {
+                "keywords": ["generiere ein bild", "erstelle ein bild", "zeichne", "male"],
+                "handler": "generate_image_from_text"
+            },
+            "generate_animation": {
+                "keywords": ["generiere ein video", "erstelle ein video", "animiere"],
+                "handler": "generate_animation_from_text"
+            }
+        }
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Sends a help message."""
-    help_text = """
-<b>Verfügbare Befehle:</b>
-/start - Startet den Bot
-/help - Zeigt diese Hilfe an
-/img &lt;prompt&gt; - Generiert ein Bild
-/anim &lt;prompt&gt; - Generiert eine kurze Animation
-/upscale - Skaliert ein Bild hoch (in Entwicklung)
-"""
-    await update.message.reply_html(help_text)
+    def detect_intent(self, text: str):
+        text_lower = text.lower()
+        for intent, data in self.intents.items():
+            for keyword in data["keywords"]:
+                if keyword in text_lower:
+                    # Extrahiere den Prompt nach dem Keyword
+                    match = re.search(f"{keyword}(?: von)? (.*)", text, re.IGNORECASE)
+                    prompt = match.group(1) if match else ""
+                    return intent, prompt
+        return None, None
+
+# Initialize Dispatcher AFTER class definition
+dispatcher = NLUDispatcher()
+
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Verarbeitet normalen Text und leitet ihn bei erkannten Intents weiter."""
+    user_text = update.message.text
+    intent, prompt = dispatcher.detect_intent(user_text)
+
+    if intent == "generate_image":
+        # Leite an die Bildgenerierungsfunktion weiter
+        # Wir müssen den Kontext "künstlich" erstellen, da kein Befehl verwendet wurde
+        context.args = prompt.split()
+        await generate_image(update, context)
+    elif intent == "generate_animation":
+        context.args = prompt.split()
+        await generate_animation(update, context)
+    else:
+        # Standard-Verhalten, wenn kein Intent erkannt wird
+        await update.message.reply_text(f"Ich habe deine Nachricht erhalten: '{user_text}'")
+
+async def handle_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Verarbeitet Befehle mit RBAC-Check"""
+    user_role = Role.VIEWER  # In Praxis aus User-DB laden
+
+    if not rbac.check_permission(user_role, "execute", update.message.text.split()[0]):
+        await update.message.reply_text("Zugriff verweigert: Unzureichende Berechtigungen")
+        return
+
+    # Get response from MetaAgent (Ollama)
+    agent = MetaAgent()
+    response = agent.ask_llm(update.message.text)
+
+    await update.message.reply_text(response)
 
 async def handle_grant_role(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Vergibt eine Rolle an einen Benutzer (nur Admins)."""
@@ -98,107 +145,129 @@ async def handle_revoke_role(update: Update, context: ContextTypes.DEFAULT_TYPE)
     except Exception as e:
         await update.message.reply_text(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
 
+async def system_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Zeigt Systemstatus und Metriken"""
+    if not rbac.check_permission(Role.ADMIN, "view", "system:status"):
+        await update.message.reply_text("Zugriff verweigert: Nur Admins können den Status einsehen")
+        return
+
+    status = monitoring.health_check()
+    metrics = {
+        'Workflow-Fehler': monitoring.metrics['workflow_errors']._value.get(),
+        'Service-Laufzeit': f"{datetime.now() - monitoring.start_time}"
+    }
+
+    message = "🖥️ System Status\n\n" + "\n".join(
+        f"🔹 {k}: {v}" for k, v in {**status, **metrics}.items()
+    )
+
+    await update.message.reply_text(message)
+
 async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Generiert ein Bild, indem ein LangGraph-Workflow gestartet wird."""
-    GRAPH_GOALS_TOTAL.labels(goal_type="img").inc()
+    """Generiert ein Bild basierend auf dem Prompt mit LangGraph Integration"""
     if not context.args:
         await update.message.reply_text("Bitte gib einen Prompt an: /img <dein prompt>")
         return
 
     prompt = " ".join(context.args)
-    user_id = str(update.effective_user.id)
-    chat_id = str(update.effective_chat.id)
-    session_id = f"tg-{chat_id}-{datetime.now().timestamp()}"
-    goal = f"Generate an image with the prompt: '{prompt}'"
-
-    await update.message.reply_text(f"✅ Anfrage '{prompt}' wurde empfangen und wird geplant (ID: {session_id}).")
+    await update.message.reply_text(f"⏳ Generiere Bild für: '{prompt}'...")
     
     try:
-        # Asynchron den Graphen starten und sofort weiterlaufen,
-        # ohne auf das Ergebnis zu warten. Der Graph wird den Benutzer
-        # über den Reporter-Knoten selbstständig benachrichtigen.
-        asyncio.create_task(
-            start_graph(
-                session_id=session_id,
-                goal=goal,
-                user_ctx={"user_id": user_id, "chat_id": chat_id}
-            )
+        # Use LangGraph for image generation
+        # Alternative: Can also use start_graph directly:
+        # result = await start_graph(
+        #     session_id=f"tg-{update.effective_chat.id}-{datetime.now().timestamp()}",
+        #     goal=f"Generate image: {prompt}",
+        #     user_ctx={"user_id": str(update.effective_user.id), "chat_id": str(update.effective_chat.id)}
+        # )
+        result = await process_telegram_command(
+            command="img",
+            args=context.args,
+            user_id=str(update.effective_user.id),
+            chat_id=str(update.effective_chat.id)
         )
+
+        # Check result status
+        if result.get("status") == "completed":
+            # Send artifacts
+            import os
+            for artifact_path in result.get("artifacts", []):
+                if os.path.exists(artifact_path):
+                    await update.message.reply_photo(photo=open(artifact_path, 'rb'))
+                else:
+                    # Fallback to legacy method if artifact not found
+                    logger.warning(f"Artifact not found: {artifact_path}, falling back to legacy method")
+                    image_path = await sd_service.generate_image(prompt)
+                    await update.message.reply_photo(photo=open(image_path, 'rb'))
+        elif result.get("status") == "failed":
+            error_msg = result.get("error", "Unbekannter Fehler")
+            await update.message.reply_text(f"❌ Fehler bei der Bildgenerierung: {error_msg}")
+        else:
+            # Fallback to legacy method
+            image_path = await sd_service.generate_image(prompt)
+            await update.message.reply_photo(photo=open(image_path, 'rb'))
+
     except Exception as e:
-        logger.error(f"Failed to start graph for session {session_id}: {e}", exc_info=True)
-        await update.message.reply_text(f"❌ Fehler beim Starten des Workflows: {e}")
+        logger.error(f"Image generation failed: {e}")
+        # Fallback to legacy method
+        try:
+            image_path = await sd_service.generate_image(prompt)
+            await update.message.reply_photo(photo=open(image_path, 'rb'))
+        except Exception as legacy_error:
+            await update.message.reply_text(f"Fehler bei der Bildgenerierung: {legacy_error}")
 
 async def upscale_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Startet einen Workflow zum Hochskalieren eines Bildes."""
-    GRAPH_GOALS_TOTAL.labels(goal_type="upscale").inc()
-    # TODO: Implement logic to get the image to upscale (e.g., from a reply)
-    await update.message.reply_text("Hinweis: Das Hochskalieren von Bildern ist noch nicht vollständig implementiert.")
-
-    user_id = str(update.effective_user.id)
-    chat_id = str(update.effective_chat.id)
-    session_id = f"tg-{chat_id}-{datetime.now().timestamp()}"
-    goal = "Upscale an image" # In a real scenario, this would include the image reference
-
-    await update.message.reply_text(f"✅ Anfrage zum Hochskalieren wurde empfangen und wird geplant (ID: {session_id}).")
+    """Upscale an image using the graph."""
+    await update.message.reply_text("⏳ Upscaling image...")
     
     try:
-        asyncio.create_task(
-            start_graph(
-                session_id=session_id,
-                goal=goal,
-                user_ctx={"user_id": user_id, "chat_id": chat_id}
-            )
+        # Import start_graph if available
+        from ai.graph.run import start_graph
+
+        # Hook for graph-based upscaling
+        # This demonstrates how to use start_graph directly
+        user_id = str(update.effective_user.id)
+        chat_id = str(update.effective_chat.id)
+
+        result = await start_graph(
+            session_id=f"upscale-{chat_id}-{datetime.now().timestamp()}",
+            goal="Upscale the provided image",
+            user_ctx={
+                "user_id": user_id,
+                "chat_id": chat_id,
+                "command": "upscale",
+                "args": context.args
+            }
         )
+
+        if result.get("status") == "completed":
+            await update.message.reply_text("✅ Image upscaled successfully!")
+            # Send upscaled image if available in artifacts
+            import os
+            for artifact_path in result.get("artifacts", []):
+                if os.path.exists(artifact_path):
+                    await update.message.reply_photo(photo=open(artifact_path, 'rb'))
+        else:
+            await update.message.reply_text(f"❌ Upscaling failed: {result.get('error', 'Unknown error')}")
+
     except Exception as e:
-        logger.error(f"Failed to start graph for session {session_id}: {e}", exc_info=True)
-        await update.message.reply_text(f"❌ Fehler beim Starten des Workflows: {e}")
-
-async def clear_memory_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Clears the conversation history for the user."""
-    user_id = str(update.effective_user.id)
-    memory.clear_history(user_id)
-    await update.message.reply_text("Mein Gedächtnis für unsere Konversation wurde gelöscht.")
-
-async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """A simple health check command that replies with OK."""
-    await update.message.reply_text("OK")
-
-async def version_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Replies with the current Git commit hash."""
-    try:
-        # Execute the git command to get the short commit hash
-        git_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
-        await update.message.reply_text(f"Version: {git_hash}")
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        logger.error("Failed to get git version hash. Is git installed and is this a git repository?")
-        await update.message.reply_text("Version: unknown")
+        logger.error(f"Upscale failed: {e}")
+        await update.message.reply_text(f"❌ Error during upscaling: {str(e)}")
 
 async def generate_animation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Startet einen Workflow zum Generieren einer Animation."""
-    GRAPH_GOALS_TOTAL.labels(goal_type="anim").inc()
+    """Generiert eine Animation basierend auf dem Prompt"""
     if not context.args:
         await update.message.reply_text("Bitte gib einen Prompt an: /anim <dein prompt>")
         return
 
     prompt = " ".join(context.args)
-    user_id = str(update.effective_user.id)
-    chat_id = str(update.effective_chat.id)
-    session_id = f"tg-{chat_id}-{datetime.now().timestamp()}"
-    goal = f"Generate an animation with the prompt: '{prompt}'"
-
-    await update.message.reply_text(f"✅ Anfrage '{prompt}' wurde empfangen und wird geplant (ID: {session_id}).")
+    await update.message.reply_text(f"⏳ Generiere Animation für: '{prompt}'...")
     
     try:
-        asyncio.create_task(
-            start_graph(
-                session_id=session_id,
-                goal=goal,
-                user_ctx={"user_id": user_id, "chat_id": chat_id}
-            )
-        )
+        animation_path = await anim_service.generate_animation(prompt)
+        await update.message.reply_animation(animation=open(animation_path, 'rb'))
     except Exception as e:
-        logger.error(f"Failed to start graph for session {session_id}: {e}", exc_info=True)
-        await update.message.reply_text(f"❌ Fehler beim Starten des Workflows: {e}")
+        await update.message.reply_text(f"Fehler bei der Animationsgenerierung: {e}")
 
 # --- Autosend Queue Consumer ---
 from core.queues import telegram_autosend_queue
@@ -235,14 +304,17 @@ async def main() -> None:
     """Startet den Bot und alle asynchronen Services."""
     logger.info("Starting Telegram Bot...")
 
-    # The get_settings() function handles loading and validation.
-    # If a required variable like the bot token is missing, the program
-    # will exit with a critical error before this point.
-    settings = get_settings()
-    bot_token = settings.app.TELEGRAM_BOT_TOKEN
+    # --- Load Environment ---
+    try:
+        bot_token = core.env.TELEGRAM_BOT_TOKEN
+        if not bot_token:
+            raise EnvError("TELEGRAM_BOT_TOKEN is not set in the .env file.")
+    except EnvError as e:
+        logger.critical(f"Failed to start bot due to configuration error: {e}")
+        return
 
     # Starte Monitoring-Service im Hintergrund
-    start_metrics_server()
+    asyncio.create_task(monitoring.start())
 
     # --- Build Application ---
     app = ApplicationBuilder().token(bot_token).build()
@@ -252,17 +324,16 @@ async def main() -> None:
     logger.info("Autosend consumer task started.")
 
     # --- Register Handlers ---
-    # The `register_handlers` function from telegram_service is now the primary
-    # source for handlers. We add the new, refactored command handlers here.
-    # register_handlers(app) # This can be re-enabled if it contains other handlers.
+    register_handlers(app)
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("clear", clear_memory_command))
-    app.add_handler(CommandHandler("health", health_command))
-    app.add_handler(CommandHandler("version", version_command))
+    # Add handler for text messages
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+
+    # Add handler for commands
+    app.add_handler(MessageHandler(filters.COMMAND, handle_command))
     app.add_handler(CommandHandler("grant_role", handle_grant_role))
     app.add_handler(CommandHandler("revoke_role", handle_revoke_role))
+    app.add_handler(CommandHandler("status", system_status))
     app.add_handler(CommandHandler("img", generate_image))
     app.add_handler(CommandHandler("upscale", upscale_image))
     app.add_handler(CommandHandler("anim", generate_animation))

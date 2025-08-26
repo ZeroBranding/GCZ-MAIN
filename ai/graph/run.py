@@ -8,7 +8,6 @@ from pathlib import Path
 from ai.graph.core_graph import get_graph, GraphState
 from ai.graph.tools import get_openai_tools, execute_tool
 from core.logging import logger
-from core.monitoring import GRAPH_SESSION_DURATION_MS
 
 class GraphRunner:
     """Manages LangGraph execution sessions."""
@@ -55,9 +54,8 @@ class GraphRunner:
         }
         
         # Store session info
-        start_time = datetime.now()
         self.sessions[session_id] = {
-            "started_at": start_time,
+            "started_at": datetime.now(),
             "goal": goal,
             "status": "running"
         }
@@ -74,13 +72,8 @@ class GraphRunner:
             final_state = await self.graph.ainvoke(initial_state, config)
             
             # Update session status
-            completed_at = datetime.now()
             self.sessions[session_id]["status"] = final_state["status"]
-            self.sessions[session_id]["completed_at"] = completed_at
-
-            # Record session duration metric
-            duration_ms = (completed_at - start_time).total_seconds() * 1000
-            GRAPH_SESSION_DURATION_MS.observe(duration_ms)
+            self.sessions[session_id]["completed_at"] = datetime.now()
             
             # Prepare result
             result = {

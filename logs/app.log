@@ -36,33 +36,46 @@
 2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
 2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
 2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
-{"timestamp": "2025-08-26 18:02:01,925", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:02:01,926", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:02:01,927", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:02:01,927", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
-{"timestamp": "2025-08-26 18:02:04,521", "level": "CRITICAL", "name": "core.config", "message": "FATAL: Configuration validation error: 1 validation error for AppSettings\nTELEGRAM_BOT_TOKEN\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"}
-{"timestamp": "2025-08-26 18:02:54,714", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:02:54,715", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:02:54,715", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:02:54,716", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
-{"timestamp": "2025-08-26 18:02:57,097", "level": "CRITICAL", "name": "core.config", "message": "FATAL: Configuration validation error: 1 validation error for AppSettings\nTELEGRAM_BOT_TOKEN\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"}
-{"timestamp": "2025-08-26 18:25:58,222", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:25:58,224", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:25:58,224", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:25:58,224", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
-{"timestamp": "2025-08-26 18:27:52,099", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:27:52,100", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:27:52,101", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:27:52,101", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
-{"timestamp": "2025-08-26 18:34:18,512", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
-{"timestamp": "2025-08-26 18:43:29,074", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:43:29,076", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:43:29,076", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:43:29,076", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
-{"timestamp": "2025-08-26 18:45:10,394", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:45:10,395", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:45:10,395", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:45:10,395", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 19:06:13,565", "level": "ERROR", "name": "root", "message": "Failed to initialize EmailService: Email credentials (e.g., GMAIL_USER, GMAIL_PASS) not set in environment."}
+{"timestamp": "2025-08-26 19:06:13,566", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:06:13,566", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:06:13,566", "level": "INFO", "name": "root", "message": "AnimService initialized. FFMPEG path: ffmpeg"}
+{"timestamp": "2025-08-26 19:06:13,566", "level": "INFO", "name": "root", "message": "Initializing GCZ Agent..."}
+{"timestamp": "2025-08-26 19:06:13,568", "level": "INFO", "name": "root", "message": "Routing config loaded. Planner: gpt-oss:20b"}
+{"timestamp": "2025-08-26 19:06:13,656", "level": "INFO", "name": "root", "message": "Ollama client configured for endpoint: http://localhost:11434"}
+{"timestamp": "2025-08-26 19:06:13,656", "level": "INFO", "name": "root", "message": "ToolsRegistry initialized."}
+{"timestamp": "2025-08-26 19:06:13,661", "level": "INFO", "name": "root", "message": "Loaded 8 tool(s) from /app/configs/tools.yml."}
+{"timestamp": "2025-08-26 19:06:13,996", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 19:06:13,996", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 19:06:13,996", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 19:06:13,996", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 19:07:18,308", "level": "ERROR", "name": "root", "message": "Failed to initialize EmailService: Email credentials (e.g., GMAIL_USER, GMAIL_PASS) not set in environment."}
+{"timestamp": "2025-08-26 19:07:18,309", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:07:18,309", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:07:18,309", "level": "INFO", "name": "root", "message": "AnimService initialized. FFMPEG path: ffmpeg"}
+{"timestamp": "2025-08-26 19:07:18,309", "level": "INFO", "name": "root", "message": "Initializing GCZ Agent..."}
+{"timestamp": "2025-08-26 19:07:18,310", "level": "INFO", "name": "root", "message": "Routing config loaded. Planner: gpt-oss:20b"}
+{"timestamp": "2025-08-26 19:07:18,385", "level": "INFO", "name": "root", "message": "Ollama client configured for endpoint: http://localhost:11434"}
+{"timestamp": "2025-08-26 19:07:18,385", "level": "INFO", "name": "root", "message": "ToolsRegistry initialized."}
+{"timestamp": "2025-08-26 19:07:18,390", "level": "INFO", "name": "root", "message": "Loaded 8 tool(s) from /app/configs/tools.yml."}
+{"timestamp": "2025-08-26 19:07:18,701", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 19:07:18,701", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 19:07:18,701", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 19:07:18,702", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 19:12:26,921", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 19:12:26,921", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 19:12:26,921", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 19:12:26,921", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 19:12:28,725", "level": "ERROR", "name": "root", "message": "Failed to initialize EmailService: Email credentials (e.g., GMAIL_USER, GMAIL_PASS) not set in environment."}
+{"timestamp": "2025-08-26 19:12:28,726", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:12:28,726", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:12:28,727", "level": "INFO", "name": "root", "message": "AnimService initialized. FFMPEG path: ffmpeg"}
+{"timestamp": "2025-08-26 19:12:28,727", "level": "INFO", "name": "root", "message": "Initializing GCZ Agent..."}
+{"timestamp": "2025-08-26 19:12:28,729", "level": "INFO", "name": "root", "message": "Routing config loaded. Planner: gpt-oss:20b"}
+{"timestamp": "2025-08-26 19:12:28,846", "level": "INFO", "name": "root", "message": "Ollama client configured for endpoint: http://localhost:11434"}
+{"timestamp": "2025-08-26 19:12:28,847", "level": "INFO", "name": "root", "message": "ToolsRegistry initialized."}
+{"timestamp": "2025-08-26 19:12:28,852", "level": "INFO", "name": "root", "message": "Loaded 8 tool(s) from /app/configs/tools.yml."}
+{"timestamp": "2025-08-26 19:16:18,178", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 19:16:18,178", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 19:16:18,179", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 19:16:18,179", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
