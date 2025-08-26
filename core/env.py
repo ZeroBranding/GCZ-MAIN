@@ -76,3 +76,8 @@ COQUI_TOS_AGREED: bool = _first('COQUI_TOS_AGREED', default='0') == '1'
 TTS_HOME: str | None = _first('TTS_HOME')
 TORTOISE_MODELS_DIR: str | None = _first('TORTOISE_MODELS_DIR')
 HF_ENDPOINT: str = _first('HF_ENDPOINT', default='https://huggingface.co')
+
+# --- Media & Artifact Handling ---
+SAVE_MEDIA_LOCALLY: bool = _first('SAVE_MEDIA_LOCALLY', default='1').lower() in ('1', 'true', 'yes')
+TELEGRAM_SEND_IMAGES: bool = _first('TELEGRAM_SEND_IMAGES', default='1').lower() in ('1', 'true', 'yes')
+TELEGRAM_SEND_VIDEOS: bool = _first('TELEGRAM_SEND_VIDEOS', default='1').lower() in ('1', 'true', 'yes')

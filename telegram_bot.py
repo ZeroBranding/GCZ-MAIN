@@ -22,8 +22,8 @@ from services.telegram_service import register_handlers
 from agents.meta_agent import MetaAgent
 from core.security import RBACService, Role
 from core.monitoring import MonitoringService
-from services.sd_service import SDService
-from services.anim_service import AnimService
+from services.sd_service import get_sd_service
+from services.anim_service import get_anim_service
 
 # Initialize RBAC Service
 rbac = RBACService()
@@ -32,9 +32,9 @@ rbac = RBACService()
 monitoring = MonitoringService()
 # asyncio.create_task(monitoring.start()) # Entfernt, da es einen RuntimeError verursacht
 
-# Initialize Services
-sd_service = SDService()
-anim_service = AnimService()
+# Initialize Services using the singleton getter
+sd_service = get_sd_service()
+anim_service = get_anim_service()
 
 class NLUDispatcher:
     def __init__(self):
@@ -158,37 +158,6 @@ async def system_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     
     await update.message.reply_text(message)
 
-async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Generiert ein Bild basierend auf dem User-Prompt."""
-    if not context.args:
-        await update.message.reply_text("Bitte geben Sie einen Prompt an. Beispiel: /img Ein Astronaut auf einem Pferd")
-        return
-
-    prompt = " ".join(context.args)
-    await update.message.reply_text(f"⏳ Generiere Bild für: '{prompt}'...")
-    
-    try:
-        image_path = await sd_service.generate_image(prompt)
-        await update.message.reply_photo(photo=open(image_path, 'rb'))
-    except Exception as e:
-        await update.message.reply_text(f"Fehler bei der Bildgenerierung: {e}")
-
-async def generate_animation(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Generiert eine Animation basierend auf dem User-Prompt."""
-    if not context.args:
-        await update.message.reply_text("Bitte geben Sie einen Prompt an. Beispiel: /anim Ein tanzender Roboter")
-        return
-
-    prompt = " ".join(context.args)
-    await update.message.reply_text(f"⏳ Generiere Animation für: '{prompt}'...")
-
-    try:
-        # Dies ist eine vereinfachte Annahme; der AnimService benötigt ggf. mehr
-        video_path = await anim_service.animate_from_prompt(prompt)
-        await update.message.reply_video(video=open(video_path, 'rb'))
-    except Exception as e:
-        await update.message.reply_text(f"Fehler bei der Animationsgenerierung: {e}")
-
 
 async def main() -> None:
     """Startet den Bot und alle asynchronen Services."""
@@ -219,8 +188,6 @@ async def main() -> None:
     app.add_handler(MessageHandler(filters.COMMAND, handle_command))
     app.add_handler(CommandHandler("grant_role", handle_grant_role))
     app.add_handler(CommandHandler("revoke_role", handle_revoke_role))
-    app.add_handler(CommandHandler("img", generate_image))
-    app.add_handler(CommandHandler("anim", generate_animation))
     app.add_handler(CommandHandler("status", system_status))
 
     # --- Start Polling ---

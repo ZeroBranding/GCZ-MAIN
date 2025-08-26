@@ -27,6 +27,16 @@ class SDService:
             f"Artifacts: {self.artifacts_dir}"
         )
 
+# --- Singleton Pattern ---
+_sd_service_instance: Optional[SDService] = None
+
+def get_sd_service() -> SDService:
+    """Returns the singleton instance of the SDService."""
+    global _sd_service_instance
+    if _sd_service_instance is None:
+        _sd_service_instance = SDService()
+    return _sd_service_instance
+
     def _queue_prompt(self, prompt_workflow: dict) -> str:
         """Sends a prompt to the ComfyUI queue and returns the prompt ID."""
         p = {"prompt": prompt_workflow, "client_id": self.client_id}
@@ -71,8 +81,10 @@ class SDService:
         steps: int = 20,
         seed: Optional[int] = None,
         negative_prompt: Optional[str] = None
-    ) -> str:
-        """Generates an image from a text prompt via a pre-defined workflow."""
+    ) -> bytes:
+        """
+        Generates an image from a text prompt and returns the image as bytes.
+        """
         workflow_path = self.workflows_dir / "sd15_txt2img.json"
         if not workflow_path.exists():
             raise ConfigError(
@@ -112,17 +124,8 @@ class SDService:
                             image_data['subfolder'],
                             image_data['type']
                         )
-
-                        final_seed = prompt_workflow["3"]["inputs"]["seed"]
-                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        output_filename = f"IMG_{timestamp}_{final_seed}.png"
-                        output_path = self.artifacts_dir / output_filename
-
-                        with open(output_path, "wb") as f_out:
-                            f_out.write(image_bytes)
-
-                        logger.info(f"Image saved to: {output_path.resolve()}")
-                        return str(output_path.resolve())
+                        logger.info(f"Successfully generated image bytes for prompt ID: {prompt_id}")
+                        return image_bytes
             time.sleep(1)
 
         raise ExternalToolError("txt2img task timed out waiting for ComfyUI.")
