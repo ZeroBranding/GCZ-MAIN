@@ -1,0 +1,14 @@
+2025-08-26 03:17:52,997 - root - INFO - Registered new schema 'sd_generate' version 1.0.0
+2025-08-26 03:17:52,997 - root - INFO - Registered new schema 'upscale_image' version 1.0.0
+2025-08-26 03:17:52,998 - root - INFO - Registered new schema 'upload_file' version 1.0.0
+2025-08-26 03:17:52,998 - root - INFO - Registered new schema 'transcribe_audio' version 1.0.0
+2025-08-26 03:17:52,998 - root - INFO - Registered new schema 'synthesize_speech' version 1.0.0
+2025-08-26 03:17:52,999 - root - INFO - Registered new schema 'generate_animation' version 1.0.0
+2025-08-26 03:17:52,999 - root - INFO - Registered all tool schemas
+2025-08-26 03:20:29,126 - root - INFO - Registered new schema 'sd_generate' version 1.0.0
+2025-08-26 03:20:29,127 - root - INFO - Registered new schema 'upscale_image' version 1.0.0
+2025-08-26 03:20:29,127 - root - INFO - Registered new schema 'upload_file' version 1.0.0
+2025-08-26 03:20:29,127 - root - INFO - Registered new schema 'transcribe_audio' version 1.0.0
+2025-08-26 03:20:29,128 - root - INFO - Registered new schema 'synthesize_speech' version 1.0.0
+2025-08-26 03:20:29,128 - root - INFO - Registered new schema 'generate_animation' version 1.0.0
+2025-08-26 03:20:29,128 - root - INFO - Registered all tool schemas
