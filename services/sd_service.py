@@ -1,5 +1,4 @@
 import json
-import os
 import time
 import urllib.parse
 import urllib.request
@@ -8,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+import core.env
 from core.errors import ConfigError, ExternalToolError
 from core.logging import logger
 
@@ -16,7 +16,7 @@ BASE_ARTIFACTS_DIR = Path("artifacts")
 
 class SDService:
     def __init__(self, comfyui_url: Optional[str] = None):
-        self.server_address = comfyui_url or os.getenv("COMFYUI_URL", "127.0.0.1:8188")
+        self.server_address = comfyui_url or core.env.COMFYUI_URL
         self.client_id = str(uuid.uuid4())
         self.artifacts_dir = BASE_ARTIFACTS_DIR / "images"
         self.workflows_dir = Path("workflows/comfy")

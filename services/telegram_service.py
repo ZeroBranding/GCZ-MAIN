@@ -2,6 +2,7 @@ import asyncio
 import re
 from pathlib import Path
 
+import core.env
 from telegram import Update
 from telegram.ext import (
     Application,

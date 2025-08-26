@@ -12,7 +12,7 @@ from openvoice.api import ToneColorConverter
 from piper.voice import PiperVoice
 from TTS.api import TTS
 
-from core.config import get_config
+from core.config import load_config
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class VoiceProfile:
 
 class VoiceService:
     def __init__(self):
-        self.config = get_config("voice")
+        self.config = load_config("voice")
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.profile_base_dir = self.config.get("profile_dir", "models/voice")
         self.output_dir = self.config.get("output_dir", "artifacts/tts")

@@ -1,5 +1,6 @@
 import os
 
+import core.env
 from instagrapi import Client
 from instagrapi.exceptions import LoginRequired
 
@@ -9,8 +10,8 @@ def get_instagram_client():
     Initializes and returns an instagrapi client.
     Logs in using credentials from environment variables.
     """
-    username = os.getenv("IG_USERNAME")
-    password = os.getenv("IG_PASSWORD")
+    username = core.env.IG_USERNAME
+    password = core.env.IG_PASSWORD
 
     if not username or not password:
         raise ValueError("IG_USERNAME and IG_PASSWORD environment variables must be set.")

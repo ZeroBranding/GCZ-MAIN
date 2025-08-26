@@ -3,6 +3,7 @@ import os
 import time
 from typing import Dict
 
+import core.env
 from telegram import Bot
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
@@ -68,7 +69,7 @@ async def main():
             return
         
         notification_user_id = telegram_config.admin_ids[0]
-        bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+        bot_token = core.env.TELEGRAM_BOT_TOKEN
         if not bot_token:
             raise ValueError("TELEGRAM_BOT_TOKEN not set.")
 

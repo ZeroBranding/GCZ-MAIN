@@ -4,21 +4,6 @@
     This script should be run in the foreground.
 #>
 
-# --- Load .env file manually ---
-$envPath = Join-Path -Path $PSScriptRoot -ChildPath '..\.env'
-if (Test-Path $envPath) {
-    Get-Content $envPath | ForEach-Object {
-        if ($_ -match "^\s*([\w.-]+)\s*=\s*(.*)") {
-            $key = $matches[1]
-            $value = $matches[2].Trim('"')
-            [System.Environment]::SetEnvironmentVariable($key, $value, "Process")
-            Write-Host "Loaded env var for Bot: $key"
-        }
-    }
-} else {
-    Write-Warning ".env file not found. The bot will likely fail."
-}
-
 # Ensure the virtual environment is activated
 $VenvPath = Join-Path -Path $PSScriptRoot -ChildPath '..\.venv\Scripts\Activate.ps1'
 if (-not (Test-Path $VenvPath)) {

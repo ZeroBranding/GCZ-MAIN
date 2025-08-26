@@ -3,7 +3,7 @@ import logging
 import subprocess
 from typing import Optional
 
-from core.config import get_config
+from core.config import load_config
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ class PhoneService:
     Manages the phone service integration with baresip.
     """
     def __init__(self):
-        self.config = get_config("phone.yml")
+        self.config = load_config("phone.yml")
         self._process: Optional[subprocess.Popen] = None
 
     async def start(self):

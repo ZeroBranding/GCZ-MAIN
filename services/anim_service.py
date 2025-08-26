@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+import core.env
 from core.errors import ConfigError, ExternalToolError
 from core.logging import logger
 from services.sd_service import SDService  # Reuse the queuing and polling logic
@@ -18,7 +19,7 @@ class AnimService(SDService):
         super().__init__(comfyui_url)
         self.artifacts_dir = BASE_ARTIFACTS_DIR / "anim"
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
-        self.ffmpeg_path = os.getenv("PATH_FFMPEG", "ffmpeg")
+        self.ffmpeg_path = core.env.PATH_FFMPEG
         logger.info(f"AnimService initialized. FFMPEG path: {self.ffmpeg_path}")
 
     def plan_animation(

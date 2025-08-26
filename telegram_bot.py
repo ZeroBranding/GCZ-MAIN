@@ -1,4 +1,3 @@
-import os
 import asyncio
 import logging
 from datetime import datetime
@@ -16,7 +15,7 @@ from telegram.ext import (
 )
 from telegram.ext import ApplicationBuilder
 
-from core.config import load_env
+import core.env
 from core.errors import EnvError
 from core.logging import logger
 from services.telegram_service import register_handlers
@@ -25,9 +24,6 @@ from core.security import RBACService, Role
 from core.monitoring import MonitoringService
 from services.sd_service import SDService
 from services.anim_service import AnimService
-
-# Force-load environment variables at the very beginning
-load_env()
 
 # Initialize RBAC Service
 rbac = RBACService()
@@ -200,7 +196,7 @@ async def main() -> None:
 
     # --- Load Environment ---
     try:
-        bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+        bot_token = core.env.TELEGRAM_BOT_TOKEN
         if not bot_token:
             raise EnvError("TELEGRAM_BOT_TOKEN is not set in the .env file.")
     except EnvError as e:

@@ -1,11 +1,11 @@
 import argparse
 import asyncio
 import json
-import os
 from typing import Any, Dict, List
 
 from openai import AsyncOpenAI
 
+import core.env
 from agent.tools_registry import ToolsRegistry
 from core.config import RoutingConfig, load_config
 from core.errors import ConfigError, EnvError, ExternalToolError
@@ -28,7 +28,7 @@ class Agent:
             raise ConfigError(f"Failed to load routing configuration: {e}")
 
         # 2. Setup Ollama Client
-        ollama_host = os.getenv("OLLAMA_HOST")
+        ollama_host = core.env.OLLAMA_HOST
         if not ollama_host:
             raise EnvError("OLLAMA_HOST environment variable is not set.")
 
