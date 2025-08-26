@@ -11,6 +11,20 @@ import os
 
 from core.logging import logger
 
+# Bounded scheduling: limit concurrent node executions across all sessions
+_NODE_SEMAPHORE = asyncio.BoundedSemaphore(32)
+
+# Import metrics hooks (no-op by default – will not raise if absent)
+try:
+    from ai.graph import metrics  # type: ignore
+except ImportError:  # pragma: no cover
+    class _NoMetrics:  # fallback if module not present during early import
+        def __getattr__(self, _name):
+            async def _noop(*_a, **_kw):
+                return None
+            return _noop
+    metrics = _NoMetrics()  # type: ignore
+
 # State definition
 class GraphState(TypedDict):
     """State schema for the workflow graph."""
@@ -246,20 +260,61 @@ class StateGraph:
                     
             visited.add(current_node)
             
-            # Execute node
+            # Execute node with bounded scheduling and cancellation safety
             if current_node in self.nodes:
                 logger.info(f"Executing node: {current_node}")
-                node_func = self.nodes[current_node]
-                state = await node_func(state)
-                
-                # Save checkpoint
-                if self.checkpointer and config:
+
+                async def _run_node():
+                    start = asyncio.get_event_loop().time()
+                    node_func = self.nodes[current_node]
+                    out_state = await node_func(state)
+                    latency_ms = (asyncio.get_event_loop().time() - start) * 1000
+                    # Fire metric (best-effort)
+                    try:
+                        await metrics.node_latency(current_node, latency_ms)  # type: ignore
+                    except Exception:  # pragma: no cover
+                        pass
+                    return out_state
+
+                # acquire queue slot – backpressure if saturated
+                await _NODE_SEMAPHORE.acquire()
+                try:
+                    used = 32 - _NODE_SEMAPHORE._value
+                    await metrics.queue_depth(used)  # type: ignore
+                except Exception:
+                    pass
+
+                try:
+                    try:
+                        # Shield against external cancellation but allow timeout inside
+                        state = await asyncio.wait_for(asyncio.shield(_run_node()), timeout=config.get("node_timeout", 300))
+                    except asyncio.TimeoutError:
+                        logger.error(f"Node {current_node} timed out")
+                        state["status"] = "failed"
+                        state["error"] = f"timeout in node {current_node}"
+                    except asyncio.CancelledError:
+                        # cooperative cancel: mark failed but swallow to keep graph stable
+                        logger.warning(f"Cancellation received during node {current_node}")
+                        state["status"] = "failed"
+                        state["error"] = "cancelled"
+                    except Exception as e:
+                        logger.error(f"Node {current_node} raised error: {e}")
+                        raise
+                finally:
+                    _NODE_SEMAPHORE.release()
+
+                # Save deterministic checkpoint after node execution
+                if self.checkpointer and config and state:
+                    deterministic_id = f"{state.get('session_id')}:{state.get('current_step', 0)}"
                     checkpoint = Checkpoint(
-                        id=str(uuid.uuid4()),
+                        id=deterministic_id,
                         ts=datetime.now().isoformat(),
                         channel_values={"state": state, "next_node": current_node}
                     )
-                    await self.checkpointer.aput(config, checkpoint, {"node": current_node})
+                    try:
+                        await self.checkpointer.aput(config, checkpoint, {"node": current_node})
+                    except Exception as e:
+                        logger.warning(f"Checkpoint write failed: {e}")
                     
             # Determine next node
             if current_node in self.conditional_edges:
