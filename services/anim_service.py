@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+import core.env
 from core.errors import ConfigError, ExternalToolError
 from core.logging import logger
 from services.sd_service import SDService  # Reuse the queuing and polling logic
@@ -16,10 +17,21 @@ BASE_ARTIFACTS_DIR = Path("artifacts")
 class AnimService(SDService):
     def __init__(self, comfyui_url: Optional[str] = None):
         super().__init__(comfyui_url)
-        self.artifacts_dir = BASE_ARTIFACTS_DIR / "anim"
+        # Corrected artifact directory as per user request
+        self.artifacts_dir = BASE_ARTIFACTS_DIR / "videos"
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
-        self.ffmpeg_path = os.getenv("PATH_FFMPEG", "ffmpeg")
+        self.ffmpeg_path = core.env.PATH_FFMPEG
         logger.info(f"AnimService initialized. FFMPEG path: {self.ffmpeg_path}")
+
+# --- Singleton Pattern ---
+_anim_service_instance: Optional[AnimService] = None
+
+def get_anim_service() -> AnimService:
+    """Returns the singleton instance of the AnimService."""
+    global _anim_service_instance
+    if _anim_service_instance is None:
+        _anim_service_instance = AnimService()
+    return _anim_service_instance
 
     def plan_animation(
         self,
@@ -49,10 +61,9 @@ class AnimService(SDService):
         logger.info(f"Animation planned: {frame_count} frames for '{prompt}'")
         return plan
 
-    def render_animation(self, plan: Dict[str, Any]) -> str:
+    def render_animation(self, plan: Dict[str, Any]) -> bytes:
         """
-        Renders an animation based on a plan by triggering AnimateDiff in ComfyUI,
-        downloading the resulting frames, and muxing them into an MP4 with ffmpeg.
+        Renders an animation based on a plan and returns the video as bytes.
         """
         # For AnimateDiff, a specific workflow is required.
         # We assume a 'workflows/comfy/animatediff.json' exists.
@@ -110,8 +121,11 @@ class AnimService(SDService):
 
         raise ExternalToolError("AnimateDiff task timed out waiting for ComfyUI.")
 
-    def _mux_frames_to_mp4(self, job_dir: Path, fps: int) -> str:
-        """Uses ffmpeg to combine frames into an MP4 video."""
+    def _mux_frames_to_mp4(self, job_dir: Path, fps: int) -> bytes:
+        """
+        Uses ffmpeg to combine frames into an MP4 video, returns it as bytes,
+        and cleans up the temporary directory.
+        """
         frames_pattern = job_dir / "frames" / "%06d.png"
         output_path = job_dir / "out.mp4"
 
@@ -127,36 +141,49 @@ class AnimService(SDService):
 
         logger.info(f"Running ffmpeg command: {' '.join(command)}")
         try:
-            result = subprocess.run(command, check=True, capture_output=True, text=True)
-            logger.info(f"ffmpeg stdout: {result.stdout}")
-            logger.info(f"Successfully created video: {output_path.resolve()}")
-            return str(output_path.resolve())
+            subprocess.run(command, check=True, capture_output=True, text=True)
+
+            # Read the generated video file into memory
+            with open(output_path, "rb") as f:
+                video_bytes = f.read()
+
+            logger.info(f"Successfully created and read video: {output_path.resolve()}")
+            return video_bytes
+
         except FileNotFoundError:
             raise ExternalToolError(f"ffmpeg not found at '{self.ffmpeg_path}'. Please install it and ensure it's in your PATH or set PATH_FFMPEG.")
         except subprocess.CalledProcessError as e:
             logger.error(f"ffmpeg failed with exit code {e.returncode}")
             logger.error(f"ffmpeg stderr: {e.stderr}")
             raise ExternalToolError(f"ffmpeg failed to mux frames: {e.stderr}")
+        finally:
+            # Clean up the entire temporary job directory
+            import shutil
+            shutil.rmtree(job_dir)
+            logger.info(f"Cleaned up temporary job directory: {job_dir}")
 
-    async def animate_from_prompt(self, prompt: str) -> Path:
-        """
-        Vereinfachte Methode, die einen Prompt nimmt, daraus ein Bild generiert
-        und dieses dann animiert.
-        """
-        # 1. Bild generieren (Abhängigkeit von SDService)
-        # In einer echten Architektur wäre dies entkoppelt, z.B. über eine Queue.
-        from services.sd_service import SDService
-        sd_service = SDService()
-        image_path = await sd_service.generate_image(prompt)
+    # async def animate_from_prompt(self, prompt: str) -> Path:
+    #     """
+    #     Vereinfachte Methode, die einen Prompt nimmt, daraus ein Bild generiert
+    #     und dieses dann animiert.
+    #     NOTE: This method is currently broken due to architectural changes (services
+    #     returning bytes instead of paths) and placeholder logic. It is disabled
+    #     until it can be properly refactored.
+    #     """
+    #     # 1. Bild generieren (Abhängigkeit von SDService)
+    #     # In einer echten Architektur wäre dies entkoppelt, z.B. über eine Queue.
+    #     from services.sd_service import SDService
+    #     sd_service = SDService()
+    #     image_path = await sd_service.generate_image(prompt)
 
-        # 2. Bild animieren (Annahme: animate_image nimmt einen Bildpfad)
-        # Dies ist eine Platzhalterlogik, da die genaue Funktionsweise
-        # von SadTalker/etc. von einem Input-Video und Audio abhängt.
-        # Wir simulieren es hier mit dem generierten Bild.
-        animated_path = self.animate_image(
-            source_image=image_path,
-            driving_video=self.driving_video, # Annahme: ein Standard-Video existiert
-            preprocess="full",
-            still=True
-        )
-        return animated_path
+    #     # 2. Bild animieren (Annahme: animate_image nimmt einen Bildpfad)
+    #     # Dies ist eine Platzhalterlogik, da die genaue Funktionsweise
+    #     # von SadTalker/etc. von einem Input-Video und Audio abhängt.
+    #     # Wir simulieren es hier mit dem generierten Bild.
+    #     animated_path = self.animate_image(
+    #         source_image=image_path,
+    #         driving_video=self.driving_video, # Annahme: ein Standard-Video existiert
+    #         preprocess="full",
+    #         still=True
+    #     )
+    #     return animated_path

@@ -1,5 +1,4 @@
 import json
-import os
 import time
 import urllib.parse
 import urllib.request
@@ -8,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+import core.env
 from core.errors import ConfigError, ExternalToolError
 from core.logging import logger
 
@@ -16,7 +16,7 @@ BASE_ARTIFACTS_DIR = Path("artifacts")
 
 class SDService:
     def __init__(self, comfyui_url: Optional[str] = None):
-        self.server_address = comfyui_url or os.getenv("COMFYUI_URL", "127.0.0.1:8188")
+        self.server_address = comfyui_url or core.env.COMFYUI_URL
         self.client_id = str(uuid.uuid4())
         self.artifacts_dir = BASE_ARTIFACTS_DIR / "images"
         self.workflows_dir = Path("workflows/comfy")
@@ -26,6 +26,16 @@ class SDService:
             f"SDService initialized. API: http://{self.server_address}, "
             f"Artifacts: {self.artifacts_dir}"
         )
+
+# --- Singleton Pattern ---
+_sd_service_instance: Optional[SDService] = None
+
+def get_sd_service() -> SDService:
+    """Returns the singleton instance of the SDService."""
+    global _sd_service_instance
+    if _sd_service_instance is None:
+        _sd_service_instance = SDService()
+    return _sd_service_instance
 
     def _queue_prompt(self, prompt_workflow: dict) -> str:
         """Sends a prompt to the ComfyUI queue and returns the prompt ID."""
@@ -71,8 +81,10 @@ class SDService:
         steps: int = 20,
         seed: Optional[int] = None,
         negative_prompt: Optional[str] = None
-    ) -> str:
-        """Generates an image from a text prompt via a pre-defined workflow."""
+    ) -> bytes:
+        """
+        Generates an image from a text prompt and returns the image as bytes.
+        """
         workflow_path = self.workflows_dir / "sd15_txt2img.json"
         if not workflow_path.exists():
             raise ConfigError(
@@ -112,17 +124,8 @@ class SDService:
                             image_data['subfolder'],
                             image_data['type']
                         )
-
-                        final_seed = prompt_workflow["3"]["inputs"]["seed"]
-                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        output_filename = f"IMG_{timestamp}_{final_seed}.png"
-                        output_path = self.artifacts_dir / output_filename
-
-                        with open(output_path, "wb") as f_out:
-                            f_out.write(image_bytes)
-
-                        logger.info(f"Image saved to: {output_path.resolve()}")
-                        return str(output_path.resolve())
+                        logger.info(f"Successfully generated image bytes for prompt ID: {prompt_id}")
+                        return image_bytes
             time.sleep(1)
 
         raise ExternalToolError("txt2img task timed out waiting for ComfyUI.")

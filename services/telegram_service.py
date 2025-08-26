@@ -2,6 +2,7 @@ import asyncio
 import re
 from pathlib import Path
 
+import core.env
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -14,9 +15,9 @@ from telegram.ext import (
 from agent.agent import Agent
 from core.logging import logger
 from core.memory import Memory
-from services.anim_service import AnimService
+from services.anim_service import get_anim_service
 from services.email_service import EmailService
-from services.sd_service import SDService
+from services.sd_service import get_sd_service
 
 # Import other services as needed...
 
@@ -34,13 +35,13 @@ except Exception as e:
     email_service = None
 
 try:
-    sd_service = SDService()
+    sd_service = get_sd_service()
 except Exception as e:
     logger.error(f"Failed to initialize SDService: {e}")
     sd_service = None
 
 try:
-    anim_service = AnimService()
+    anim_service = get_anim_service()
 except Exception as e:
     logger.error(f"Failed to initialize AnimService: {e}")
     anim_service = None
@@ -80,14 +81,68 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     """
     await update.message.reply_html(help_text)
 
+import subprocess
+
 async def clear_memory_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Clears the conversation history for the user."""
     user_id = str(update.effective_user.id)
     memory.clear_history(user_id)
     await update.message.reply_text("Mein Gedächtnis für unsere Konversation wurde gelöscht.")
 
+# --- Health & Version Handlers ---
+
+async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """A simple health check command that replies with OK."""
+    await update.message.reply_text("OK")
+
+async def version_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Replies with the current Git commit hash."""
+    try:
+        # Execute the git command to get the short commit hash
+        git_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+        await update.message.reply_text(f"Version: {git_hash}")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        logger.error("Failed to get git version hash. Is git installed and is this a git repository?")
+        await update.message.reply_text("Version: unknown")
+
+
+from core.queues import telegram_autosend_queue
 
 # --- Email Command Handlers ---
+
+async def autosend_test_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    A test command to verify the autosend queue mechanism.
+    Generates an image and puts it on the queue to be sent by the consumer.
+    """
+    if not sd_service:
+        await update.message.reply_text("Bildgenerierungs-Dienst ist nicht verfügbar.")
+        return
+
+    chat_id = update.effective_chat.id
+    prompt = "A robot testing a message queue"
+
+    await update.message.reply_text(f"⏳ Teste Autosend-Hook mit Prompt: '{prompt}'...")
+    try:
+        image_bytes = await asyncio.to_thread(sd_service.txt2img, prompt=prompt)
+
+        # Create the message for the queue
+        message = {
+            "type": "photo",
+            "chat_id": chat_id,
+            "bytes": image_bytes,
+            "caption": f"Autosend-Test erfolgreich!\nPrompt: '{prompt}'"
+        }
+
+        # Put the message on the queue
+        await telegram_autosend_queue.put(message)
+
+        await update.message.reply_text("✅ Test-Nachricht wurde in die Autosend-Queue gelegt. Der Consumer sollte sie gleich senden.")
+
+    except Exception as e:
+        logger.error(f"Error in /autosend_test command: {e}", exc_info=True)
+        await update.message.reply_text(f"Fehler beim Testen des Autosend-Hooks: {e}")
+
 
 async def mail_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Lists unread emails."""
@@ -164,10 +219,12 @@ async def confirm_email_send(update: Update, context: ContextTypes.DEFAULT_TYPE)
         logger.error(f"Error sending email: {e}")
         await update.message.reply_text(f"Fehler beim Senden der E-Mail: {e}")
 
+from datetime import datetime
+
 # --- Media Generation Handlers ---
 
 async def img_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Generates an image from a prompt."""
+    """Generates an image from a prompt, saves it locally and sends it to Telegram based on flags."""
     if not sd_service:
         await update.message.reply_text("Bildgenerierungs-Dienst ist nicht verfügbar.")
         return
@@ -177,16 +234,36 @@ async def img_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await update.message.reply_text("Verwendung: /img <prompt>")
         return
 
-    await update.message.reply_text(f"Generiere Bild für: '{prompt}'...")
+    await update.message.reply_text(f"⏳ Generiere Bild für: '{prompt}'...")
     try:
-        image_path_str = await asyncio.to_thread(sd_service.txt2img, prompt=prompt)
-        await update.message.reply_photo(photo=Path(image_path_str))
+        # 1. Generate image bytes
+        image_bytes = await asyncio.to_thread(sd_service.txt2img, prompt=prompt)
+
+        if not image_bytes:
+            raise ValueError("Image generation failed, returned empty bytes.")
+
+        # 2. Save media locally if flag is set
+        if core.env.SAVE_MEDIA_LOCALLY:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_filename = f"IMG_{timestamp}_{prompt[:20].replace(' ', '_')}.png"
+            output_path = ARTIFACTS_DIR / "images" / output_filename
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_path, "wb") as f:
+                f.write(image_bytes)
+            logger.info(f"Image saved locally to {output_path}")
+
+        # 3. Send image to Telegram if flag is set
+        if core.env.TELEGRAM_SEND_IMAGES:
+            await update.message.reply_photo(photo=image_bytes)
+        else:
+            await update.message.reply_text("✅ Bild generiert (Senden an Telegram ist deaktiviert).")
+
     except Exception as e:
         logger.error(f"Error in /img command: {e}", exc_info=True)
         await update.message.reply_text(f"Fehler bei der Bildgenerierung: {e}")
 
 async def anim_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Generates an animation from a prompt."""
+    """Generates an animation from a prompt, saves it locally and sends it to Telegram based on flags."""
     if not anim_service:
         await update.message.reply_text("Animations-Dienst ist nicht verfügbar.")
         return
@@ -196,13 +273,31 @@ async def anim_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_text("Verwendung: /anim <prompt>")
         return
 
-    await update.message.reply_text(f"Generiere Animation für: '{prompt}'...")
+    await update.message.reply_text(f"⏳ Generiere Animation für: '{prompt}'...")
     try:
+        # 1. Plan and render animation to get bytes
         plan = anim_service.plan_animation(prompt=prompt)
-        video_path_str = await asyncio.to_thread(
-            anim_service.render_animation, plan=plan
-        )
-        await update.message.reply_video(video=Path(video_path_str))
+        video_bytes = await asyncio.to_thread(anim_service.render_animation, plan=plan)
+
+        if not video_bytes:
+            raise ValueError("Animation generation failed, returned empty bytes.")
+
+        # 2. Save media locally if flag is set
+        if core.env.SAVE_MEDIA_LOCALLY:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_filename = f"VID_{timestamp}_{prompt[:20].replace(' ', '_')}.mp4"
+            output_path = ARTIFACTS_DIR / "videos" / output_filename
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_path, "wb") as f:
+                f.write(video_bytes)
+            logger.info(f"Video saved locally to {output_path}")
+
+        # 3. Send video to Telegram if flag is set
+        if core.env.TELEGRAM_SEND_VIDEOS:
+            await update.message.reply_video(video=video_bytes)
+        else:
+            await update.message.reply_text("✅ Animation generiert (Senden an Telegram ist deaktiviert).")
+
     except Exception as e:
         logger.error(f"Error in /anim command: {e}", exc_info=True)
         await update.message.reply_text(f"Fehler bei der Animationsgenerierung: {e}")
@@ -299,6 +394,9 @@ def register_handlers(app: Application):
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("clear", clear_memory_command))
+    app.add_handler(CommandHandler("health", health_command))
+    app.add_handler(CommandHandler("version", version_command))
+    app.add_handler(CommandHandler("autosend_test", autosend_test_command))
 
     # Email handlers
     app.add_handler(CommandHandler("mail_list", mail_list))

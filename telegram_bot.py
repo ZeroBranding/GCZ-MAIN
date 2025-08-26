@@ -1,4 +1,3 @@
-import os
 import asyncio
 import logging
 from datetime import datetime
@@ -14,23 +13,21 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+from telegram import Bot
 from telegram.ext import ApplicationBuilder
 
-from core.config import load_env
+import core.env
 from core.errors import EnvError
 from core.logging import logger
 from services.telegram_service import register_handlers
 from agents.meta_agent import MetaAgent
 from core.security import RBACService, Role
 from core.monitoring import MonitoringService
-from services.sd_service import SDService
-from services.anim_service import AnimService
+from services.sd_service import get_sd_service
+from services.anim_service import get_anim_service
 
 # Import LangGraph integration
 from ai.graph.run import process_telegram_command
-
-# Force-load environment variables at the very beginning
-load_env()
 
 # Initialize RBAC Service
 rbac = RBACService()
@@ -39,9 +36,9 @@ rbac = RBACService()
 monitoring = MonitoringService()
 # asyncio.create_task(monitoring.start()) # Entfernt, da es einen RuntimeError verursacht
 
-# Initialize Services
-sd_service = SDService()
-anim_service = AnimService()
+# Initialize Services using the singleton getter
+sd_service = get_sd_service()
+anim_service = get_anim_service()
 
 class NLUDispatcher:
     def __init__(self):
@@ -165,12 +162,12 @@ async def system_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     
     await update.message.reply_text(message)
 
-async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Generiert ein Bild basierend auf dem User-Prompt."""
+async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Generiert ein Bild basierend auf dem Prompt mit LangGraph Integration"""
     if not context.args:
-        await update.message.reply_text("Bitte geben Sie einen Prompt an. Beispiel: /img Ein Astronaut auf einem Pferd")
+        await update.message.reply_text("Bitte gib einen Prompt an: /img <dein prompt>")
         return
-
+    
     prompt = " ".join(context.args)
     await update.message.reply_text(f"⏳ Generiere Bild für: '{prompt}'...")
     
@@ -186,6 +183,7 @@ async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Check result status
         if result.get("status") == "completed":
             # Send artifacts
+            import os
             for artifact_path in result.get("artifacts", []):
                 if os.path.exists(artifact_path):
                     await update.message.reply_photo(photo=open(artifact_path, 'rb'))
@@ -211,21 +209,50 @@ async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as legacy_error:
             await update.message.reply_text(f"Fehler bei der Bildgenerierung: {legacy_error}")
 
-async def generate_animation(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Generiert eine Animation basierend auf dem User-Prompt."""
+async def generate_animation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Generiert eine Animation basierend auf dem Prompt"""
     if not context.args:
-        await update.message.reply_text("Bitte geben Sie einen Prompt an. Beispiel: /anim Ein tanzender Roboter")
+        await update.message.reply_text("Bitte gib einen Prompt an: /anim <dein prompt>")
         return
-
+    
     prompt = " ".join(context.args)
     await update.message.reply_text(f"⏳ Generiere Animation für: '{prompt}'...")
-
+    
     try:
-        # Dies ist eine vereinfachte Annahme; der AnimService benötigt ggf. mehr
-        video_path = await anim_service.animate_from_prompt(prompt)
-        await update.message.reply_video(video=open(video_path, 'rb'))
+        animation_path = await anim_service.generate_animation(prompt)
+        await update.message.reply_animation(animation=open(animation_path, 'rb'))
     except Exception as e:
         await update.message.reply_text(f"Fehler bei der Animationsgenerierung: {e}")
+
+# --- Autosend Queue Consumer ---
+from core.queues import telegram_autosend_queue
+
+async def autosend_consumer(bot: Bot):
+    """
+    Waits for messages on the autosend queue and sends them to the specified chat.
+    """
+    logger.info("Starting Telegram autosend consumer...")
+    while True:
+        try:
+            item = await telegram_autosend_queue.get()
+            logger.info(f"Got item from autosend queue: {item.get('type')}")
+
+            chat_id = item.get('chat_id')
+            if not chat_id:
+                logger.warning("No chat_id in autosend queue item. Skipping.")
+                continue
+
+            if item.get('type') == 'photo':
+                await bot.send_photo(chat_id=chat_id, photo=item.get('bytes'), caption=item.get('caption'))
+            elif item.get('type') == 'video':
+                await bot.send_video(chat_id=chat_id, video=item.get('bytes'), caption=item.get('caption'))
+            elif item.get('type') == 'text':
+                await bot.send_message(chat_id=chat_id, text=item.get('text'))
+
+            telegram_autosend_queue.task_done()
+
+        except Exception as e:
+            logger.error(f"Error in autosend consumer: {e}", exc_info=True)
 
 
 async def main() -> None:
@@ -234,7 +261,7 @@ async def main() -> None:
 
     # --- Load Environment ---
     try:
-        bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+        bot_token = core.env.TELEGRAM_BOT_TOKEN
         if not bot_token:
             raise EnvError("TELEGRAM_BOT_TOKEN is not set in the .env file.")
     except EnvError as e:
@@ -247,6 +274,10 @@ async def main() -> None:
     # --- Build Application ---
     app = ApplicationBuilder().token(bot_token).build()
 
+    # --- Start Core Background Tasks ---
+    asyncio.create_task(autosend_consumer(app.bot))
+    logger.info("Autosend consumer task started.")
+
     # --- Register Handlers ---
     register_handlers(app)
 
@@ -257,9 +288,9 @@ async def main() -> None:
     app.add_handler(MessageHandler(filters.COMMAND, handle_command))
     app.add_handler(CommandHandler("grant_role", handle_grant_role))
     app.add_handler(CommandHandler("revoke_role", handle_revoke_role))
+    app.add_handler(CommandHandler("status", system_status))
     app.add_handler(CommandHandler("img", generate_image))
     app.add_handler(CommandHandler("anim", generate_animation))
-    app.add_handler(CommandHandler("status", system_status))
 
     # --- Start Polling ---
     # app.run_polling() # Veraltet und verursacht Konflikt

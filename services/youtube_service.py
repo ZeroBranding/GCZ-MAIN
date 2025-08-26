@@ -1,6 +1,7 @@
 import os
 import pickle
 
+import core.env
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -22,7 +23,7 @@ def upload_to_youtube(video_path: str, title: str, description: str, tags: list,
     Returns:
         str: The ID of the uploaded video, or None if the upload failed.
     """
-    CLIENT_SECRETS_FILE = os.getenv("YOUTUBE_CLIENT_SECRETS_FILE", "client_secret.json")
+    CLIENT_SECRETS_FILE = core.env.YOUTUBE_CLIENT_SECRETS_FILE
     SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
     API_SERVICE_NAME = "youtube"
     API_VERSION = "v3"

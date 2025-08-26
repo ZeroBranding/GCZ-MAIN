@@ -1,5 +1,6 @@
 import logging
 import sys
+import json
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -9,9 +10,27 @@ LOG_FILE = LOG_DIR / 'app.log'
 MAX_BYTES = 10 * 1024 * 1024  # 10 MB
 BACKUP_COUNT = 5
 
+class JsonFormatter(logging.Formatter):
+    """
+    Formats log records as a JSON string.
+    """
+    def format(self, record):
+        log_object = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "name": record.name,
+            "message": record.getMessage(),
+        }
+        if record.exc_info:
+            log_object['exc_info'] = self.formatException(record.exc_info)
+
+        return json.dumps(log_object)
+
 def setup_logging(log_level=logging.INFO):
     """
-    Configures logging to both a rotating file and the console.
+    Configures logging.
+    - Console: Human-readable plain text.
+    - File: Machine-readable JSON, with rotation.
     """
     LOG_DIR.mkdir(exist_ok=True)
 
@@ -19,17 +38,18 @@ def setup_logging(log_level=logging.INFO):
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
 
-    # --- Formatter ---
-    formatter = logging.Formatter(
+    # --- Formatters ---
+    plain_formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
+    json_formatter = JsonFormatter()
 
     # --- Console Handler ---
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(log_level)
-    console_handler.setFormatter(formatter)
+    console_handler.setFormatter(plain_formatter)
 
-    # --- Rotating File Handler ---
+    # --- Rotating File Handler (JSON) ---
     file_handler = RotatingFileHandler(
         LOG_FILE,
         maxBytes=MAX_BYTES,
@@ -37,7 +57,7 @@ def setup_logging(log_level=logging.INFO):
         encoding='utf-8'
     )
     file_handler.setLevel(log_level)
-    file_handler.setFormatter(formatter)
+    file_handler.setFormatter(json_formatter)
 
     # --- Add Handlers to Root Logger ---
     # Clear existing handlers to avoid duplicates

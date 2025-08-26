@@ -9,14 +9,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- Environment Loading ---
 def load_env():
-    """Loads environment variables from the .env file."""
+    """
+    Loads environment variables from the .env file if it exists.
+    This is part of the legacy config system and is superseded by core.env.
+    It's modified to not crash if .env is missing.
+    """
     from dotenv import load_dotenv
-    env_path = BASE_DIR / '.env'
-    if not env_path.exists():
-        raise FileNotFoundError(f".env file not found at {env_path}. Please copy .env.template and fill it out.")
-    load_dotenv(dotenv_path=env_path)
+    load_dotenv()
 
-load_env()
+# load_env() # This is now handled by core.env
 
 # --- Configuration Models ---
 

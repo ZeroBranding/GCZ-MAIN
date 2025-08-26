@@ -8,6 +8,7 @@ from email.message import EmailMessage
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import core.env
 from agent.agent import Agent
 from core.config import EmailConfig, load_config
 from core.errors import ConfigError, ExternalToolError
@@ -24,11 +25,11 @@ class EmailService:
             raise ConfigError(f"Account type '{account_type}' not in email config.")
 
         self.account_config = getattr(self.config, account_type)
-        self.email_user = os.getenv(self.account_config['user_env'])
-        self.email_pass = os.getenv(self.account_config['password_env'])
+        self.email_user = core.env.EMAIL_USER
+        self.email_pass = core.env.EMAIL_PASS
 
         if not self.email_user or not self.email_pass:
-            raise ConfigError(f"Env vars for user/password for '{account_type}' not set.")
+            raise ConfigError(f"Email credentials (e.g., GMAIL_USER, GMAIL_PASS) not set in environment.")
 
         self.imap_server = self.account_config['imap_host']
         self.smtp_server = self.account_config['smtp_host']
@@ -42,13 +43,16 @@ class EmailService:
             mail = imaplib.IMAP4_SSL(self.imap_server)
             mail.login(self.email_user, self.email_pass)
             return mail
-        except Exception as e:
+        except imaplib.IMAP4.error as e:
+            # This is a specific exception for IMAP errors (e.g., login failure)
             raise ExternalToolError(f"IMAP connection failed: {e}")
 
     def list_unread_emails(self) -> List[Dict[str, str]]:
         """Retrieves a list of unread emails."""
-        mail = self._connect_imap()
-        if not mail:
+        try:
+            mail = self._connect_imap()
+        except ExternalToolError as e:
+            logger.error(f"Cannot list unread emails, connection failed: {e}")
             return []
 
         mail.select('inbox')
@@ -82,7 +86,12 @@ class EmailService:
 
     def fetch_email(self, email_id: str) -> Optional[EmailMessage]:
         """Fetches a specific email by its ID."""
-        mail = self._connect_imap()
+        try:
+            mail = self._connect_imap()
+        except ExternalToolError as e:
+            logger.error(f"Cannot fetch email, connection failed: {e}")
+            return None
+
         try:
             mail.select('inbox')
             status, data = mail.fetch(email_id, '(RFC822)')

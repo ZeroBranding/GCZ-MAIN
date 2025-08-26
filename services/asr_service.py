@@ -9,7 +9,7 @@ import torch
 import torchaudio
 from faster_whisper import WhisperModel
 
-from core.config import get_config
+from core.config import load_config
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class SileroVAD:
 
 class ASRService:
     def __init__(self):
-        asr_config = get_config("asr")
+        asr_config = load_config("asr")
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         model_size = asr_config.get("whisper_model", "large-v3")
         compute_type = "float16" if self.device == "cuda" else "int8"

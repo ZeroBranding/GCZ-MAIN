@@ -21,8 +21,9 @@ class MonitoringService:
         
     async def start(self):
         """Startet den Monitoring-Server"""
-        start_http_server(9090)
-        logging.info("Monitoring-Service gestartet auf Port 9090")
+        # Bind to 127.0.0.1 to ensure the port is not exposed externally.
+        start_http_server(9090, addr='127.0.0.1')
+        logging.info("Monitoring-Service gestartet auf Port 9090 (localhost)")
 
     def log_error(self, service: str):
         """Protokolliert einen Service-Fehler"""
