@@ -112,12 +112,6 @@ def get_sd_service() -> SDService:
         self,
         prompt: str,
         seed: Optional[int] = None,
-<<<<<<< HEAD
-        negative_prompt: Optional[str] = None
-    ) -> bytes:
-        """
-        Generates an image from a text prompt and returns the image as bytes.
-=======
         steps: Optional[int] = None,
         cfg: Optional[float] = None,
         size: Optional[tuple] = None,
@@ -140,7 +134,6 @@ def get_sd_service() -> SDService:
             
         Returns:
             Dict with path and metadata
->>>>>>> origin/cursor/implementiere-langgraph-runtime-als-br-cke-zur-engine-8742
         """
         workflow_path = self.workflows_dir / "sd15_txt2img.json"
         if not workflow_path.exists():
@@ -177,26 +170,6 @@ def get_sd_service() -> SDService:
         logger.info(f"Queued txt2img prompt with ID: {prompt_id}")
 
         # Poll for completion
-<<<<<<< HEAD
-        timeout = 120
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            history = self._get_history(prompt_id)
-            if prompt_id in history and 'outputs' in history[prompt_id]:
-                outputs = history[prompt_id]['outputs']
-                # Find the final image output node (usually 'SaveImage')
-                for node_id in outputs:
-                    if 'images' in outputs[node_id]:
-                        image_data = outputs[node_id]['images'][0]
-                        image_bytes = self._get_image(
-                            image_data['filename'],
-                            image_data['subfolder'],
-                            image_data['type']
-                        )
-                        logger.info(f"Successfully generated image bytes for prompt ID: {prompt_id}")
-                        return image_bytes
-            time.sleep(1)
-=======
         outputs = self._poll_for_completion(prompt_id, timeout=120)
         
         # Find the final image output node (usually 'SaveImage')
@@ -231,7 +204,6 @@ def get_sd_service() -> SDService:
                         "timestamp": timestamp
                     }
                 }
->>>>>>> origin/cursor/implementiere-langgraph-runtime-als-br-cke-zur-engine-8742
 
         raise ExternalToolError("txt2img task completed but no image output found.")
         
@@ -439,3 +411,4 @@ def get_sd_service() -> SDService:
             }
         except ImportError:
             raise NotImplementedError("Upscale functionality requires upscale_service module.")
+
