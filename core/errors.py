@@ -14,6 +14,10 @@ class ExternalToolError(GCZError):
     """Raised when an external tool or service fails."""
     pass
 
+class WorkflowError(GCZError):
+    """Raised for errors related to the workflow engine."""
+    pass
+
 class MCPError(GCZError):
     """Raised for errors related to the MCP client or servers."""
     pass

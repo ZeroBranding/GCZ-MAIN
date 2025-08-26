@@ -1,13 +1,26 @@
-[tool.ruff]
-line-length = 88
-select = ["E", "F", "W", "I"]
-
 [tool.black]
-line-length = 88
-target-version = ['py311']
+line-length = 120
+target-version = ['py312']
+
+[tool.ruff]
+# Set line length to be compatible with black
+line-length = 120
+
+# Same as black
+target-version = "py312"
+
+# Select a good base set of rules
+# E = pycodestyle errors, F = pyflakes, W = pycodestyle warnings
+# I = isort, B = flake8-bugbear, C4 = flake8-comprehensions
+# A = flake8-builtins
+select = ["E", "F", "W", "I", "B", "C4", "A"]
+
+ignore = [
+    "E501", # line too long, handled by black
+]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 
@@ -16,4 +29,8 @@ minversion = "6.0"
 addopts = "-ra -q"
 testpaths = [
     "tests",
+]
+# Add the project root to the python path to fix imports
+python_paths = [
+    ".",
 ]

@@ -8,7 +8,7 @@ from pathlib import Path
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from services.document_service import DocumentService
-from core.workflows.types import Step, StepType, DocumentStepConfig
+from core.workflows.types import Step, StepType, DocumentStepConfig, Workflow
 from core.errors import WorkflowError
 
 
