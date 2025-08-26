@@ -1,5 +1,10 @@
 import pytest
 from pathlib import Path
+import sys
+
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 from core.workflows.engine import WorkflowEngine
 from core.workflows.types import Step, StepType, DocumentStepConfig
 

@@ -13,27 +13,19 @@ sys.path.append(str(BASE_DIR))
 from services.email_service import EmailService
 
 
+@patch('services.email_service.get_settings')
 class TestEmailService(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self, mock_get_settings):
         """Set up a temporary directory and mock environment for testing."""
-        # Mock config data to avoid loading a real file
-        self.mock_config = {
-            'gmail': {
-                'imap_host': 'imap.gmail.com',
-                'smtp_host': 'smtp.gmail.com',
-                'smtp_port': 587,
-                'user_env': 'TEST_GMAIL_USER',
-                'password_env': 'TEST_GMAIL_PASS'
-            }
-        }
-        # Set dummy environment variables for the test
-        os.environ['TEST_GMAIL_USER'] = 'testuser@gmail.com'
-        os.environ['TEST_GMAIL_PASS'] = 'testpass'
-
-        # Patch the load_config function to return our mock data
-        self.load_config_patcher = patch('services.email_service.load_config', return_value=self.mock_config)
-        self.mock_load_config = self.load_config_patcher.start()
+        # Mock the settings object
+        mock_settings = MagicMock()
+        mock_settings.app.EMAIL_USER = "testuser@gmail.com"
+        mock_settings.app.EMAIL_PASS = "testpass"
+        mock_settings.email.gmail.imap_host = "imap.gmail.com"
+        mock_settings.email.gmail.smtp_host = "smtp.gmail.com"
+        mock_settings.email.gmail.smtp_port = 587
+        mock_get_settings.return_value = mock_settings
 
         self.service = EmailService('gmail')
         self.test_drafts_dir = self.service.drafts_dir

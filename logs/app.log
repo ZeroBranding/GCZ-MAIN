@@ -58,3 +58,11 @@
 {"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
 {"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
 {"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 18:43:29,074", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 18:43:29,076", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 18:43:29,076", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 18:43:29,076", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 18:45:10,394", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 18:45:10,395", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 18:45:10,395", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 18:45:10,395", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
