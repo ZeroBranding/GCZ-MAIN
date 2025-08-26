@@ -14,5 +14,13 @@ if (-not (Test-Path $VenvPath)) {
 
 Write-Host "Starting the Email Poller Service..."
 Write-Host "Python will now load the .env file internally."
+
+# Ensure logs directory exists
+$baseDir = Split-Path -Path $PSScriptRoot -Parent
+$logDir = Join-Path -Path $baseDir -ChildPath "logs"
+if (-not (Test-Path $logDir)) {
+    New-Item -Path $logDir -ItemType Directory | Out-Null
+}
+
 # Redirect all output streams (stdout and stderr) to a log file
-python.exe -m services.email_poller *>> logs/poller.log
+python.exe -m services.email_poller *>> (Join-Path -Path $logDir -ChildPath "email_poller.log")
