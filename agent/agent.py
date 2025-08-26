@@ -5,9 +5,8 @@ from typing import Any, Dict, List
 
 from openai import AsyncOpenAI
 
-import core.env
+from core.config import get_settings
 from agent.tools_registry import ToolsRegistry
-from core.config import RoutingConfig, load_config
 from core.errors import ConfigError, EnvError, ExternalToolError
 from core.memory import Message
 

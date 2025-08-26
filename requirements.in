@@ -1,0 +1,43 @@
+# Core
+python-dotenv
+requests
+pydantic>=2.0
+httpx
+pyyaml
+openai
+python-telegram-bot
+
+# LangGraph & AI
+langgraph
+langchain
+langchain-community
+langchain-openai
+aiosqlite
+
+# Linting & Formatting
+ruff
+black
+mypy
+pre-commit
+
+# Social Media Services
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+Pillow
+
+# Testing
+pytest
+pytest-cov
+
+# Monitoring & Scheduling
+prometheus-client
+opentelemetry-sdk
+fastapi
+apscheduler
+psutil
+
+# Document Automation
+pypdf
+pytesseract
+pdf2image

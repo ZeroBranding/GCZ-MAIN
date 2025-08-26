@@ -34,14 +34,17 @@ Laden Sie die KI-Modelle für die verschiedenen Services herunter. Diese Skripte
 .\scripts\win\ollama_create_local_models.ps1
 ```
 
-### 3. Secrets & Logins (Einmalige manuelle Einrichtung)
+### 3. Konfiguration & Geheimnisse (Einmalige manuelle Einrichtung)
 
-Bevor Sie die Dienste nutzen können, müssen Sie sich bei den externen Plattformen authentifizieren.
+**WICHTIG:** Bevor Sie das System starten können, müssen Sie Ihre Geheimnisse und Konfigurationen einrichten.
 
-- TELEGRAM_BOT_TOKEN=7596327511:AAF9NvVIW8DK_a7AuHKglALt42SjVsYMCiE
-GMAIL_USER=liyana240425@gmail.com
-GMAIL_PASSWORD=qzxp aguy mpna zrfo
-OLLAMA_HOST=http://1227.0.0.1:11434
+1.  **`.env`-Datei erstellen:** Kopieren Sie die Vorlage `.env.template` nach `.env`.
+    ```
+    cp .env.template .env
+    ```
+2.  **Werte eintragen:** Öffnen Sie die `.env`-Datei und füllen Sie die erforderlichen Werte aus (z.B. `TELEGRAM_BOT_TOKEN`).
+
+Eine detaillierte Anleitung zum Umgang mit Geheimnissen finden Sie in der [Geheimnis- und Konfigurationsmanagement-Dokumentation](docs/security/secrets.md).
 
 - **YouTube:** Platzieren Sie Ihre `client_secret.json`-Datei von der Google Cloud Console im Projekt-Root. Beim ersten Upload öffnet sich ein Browser zur Authentifizierung, wodurch eine `token.json` erstellt wird.
 
