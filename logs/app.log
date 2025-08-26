@@ -12,3 +12,27 @@
 2025-08-26 03:20:29,128 - root - INFO - Registered new schema 'synthesize_speech' version 1.0.0
 2025-08-26 03:20:29,128 - root - INFO - Registered new schema 'generate_animation' version 1.0.0
 2025-08-26 03:20:29,128 - root - INFO - Registered all tool schemas
+2025-08-26 03:29:52,477 - root - INFO - Registered tool: generate_image
+2025-08-26 03:29:52,478 - root - INFO - Registered tool: upscale_image
+2025-08-26 03:29:52,478 - root - INFO - Registered tool: generate_animation
+2025-08-26 03:29:52,478 - root - INFO - Registered tool: call_service
+2025-08-26 03:29:59,443 - root - INFO - Registered tool: generate_image
+2025-08-26 03:29:59,443 - root - INFO - Registered tool: upscale_image
+2025-08-26 03:29:59,443 - root - INFO - Registered tool: generate_animation
+2025-08-26 03:29:59,443 - root - INFO - Registered tool: call_service
+2025-08-26 03:29:59,482 - root - INFO - Converted tool call 'sd_generate' to 2 steps
+2025-08-26 03:29:59,482 - root - INFO - Converted tool call 'sd_generate' to 2 steps
+2025-08-26 03:29:59,482 - root - INFO - Submitting workflow with correlation_id: be33005342c0a6c7e34fa0f003497902
+2025-08-26 03:29:59,482 - root - INFO - Submitting workflow with correlation_id: be33005342c0a6c7e34fa0f003497902
+2025-08-26 03:29:59,484 - root - INFO - Submitting workflow with correlation_id: explicit_id_123
+2025-08-26 03:29:59,484 - root - INFO - Submitting workflow with correlation_id: explicit_id_123
+2025-08-26 03:29:59,484 - root - INFO - Submitting workflow with correlation_id: explicit_id_123
+2025-08-26 03:30:06,946 - root - INFO - Registered tool: generate_image
+2025-08-26 03:30:06,946 - root - INFO - Registered tool: upscale_image
+2025-08-26 03:30:06,946 - root - INFO - Registered tool: generate_animation
+2025-08-26 03:30:06,946 - root - INFO - Registered tool: call_service
+2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
+2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
+2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
+2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
+2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
