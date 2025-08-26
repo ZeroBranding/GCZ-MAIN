@@ -43,13 +43,16 @@ class EmailService:
             mail = imaplib.IMAP4_SSL(self.imap_server)
             mail.login(self.email_user, self.email_pass)
             return mail
-        except Exception as e:
+        except imaplib.IMAP4.error as e:
+            # This is a specific exception for IMAP errors (e.g., login failure)
             raise ExternalToolError(f"IMAP connection failed: {e}")
 
     def list_unread_emails(self) -> List[Dict[str, str]]:
         """Retrieves a list of unread emails."""
-        mail = self._connect_imap()
-        if not mail:
+        try:
+            mail = self._connect_imap()
+        except ExternalToolError as e:
+            logger.error(f"Cannot list unread emails, connection failed: {e}")
             return []
 
         mail.select('inbox')
@@ -83,7 +86,12 @@ class EmailService:
 
     def fetch_email(self, email_id: str) -> Optional[EmailMessage]:
         """Fetches a specific email by its ID."""
-        mail = self._connect_imap()
+        try:
+            mail = self._connect_imap()
+        except ExternalToolError as e:
+            logger.error(f"Cannot fetch email, connection failed: {e}")
+            return None
+
         try:
             mail.select('inbox')
             status, data = mail.fetch(email_id, '(RFC822)')
