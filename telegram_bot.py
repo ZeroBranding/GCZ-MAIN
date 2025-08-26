@@ -26,6 +26,9 @@ from core.monitoring import MonitoringService
 from services.sd_service import SDService
 from services.anim_service import AnimService
 
+# Import LangGraph integration
+from ai.graph.run import process_telegram_command
+
 # Force-load environment variables at the very beginning
 load_env()
 
@@ -172,10 +175,41 @@ async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"⏳ Generiere Bild für: '{prompt}'...")
     
     try:
-        image_path = await sd_service.generate_image(prompt)
-        await update.message.reply_photo(photo=open(image_path, 'rb'))
+        # Use LangGraph for image generation
+        result = await process_telegram_command(
+            command="img",
+            args=context.args,
+            user_id=str(update.effective_user.id),
+            chat_id=str(update.effective_chat.id)
+        )
+        
+        # Check result status
+        if result.get("status") == "completed":
+            # Send artifacts
+            for artifact_path in result.get("artifacts", []):
+                if os.path.exists(artifact_path):
+                    await update.message.reply_photo(photo=open(artifact_path, 'rb'))
+                else:
+                    # Fallback to legacy method if artifact not found
+                    logger.warning(f"Artifact not found: {artifact_path}, falling back to legacy method")
+                    image_path = await sd_service.generate_image(prompt)
+                    await update.message.reply_photo(photo=open(image_path, 'rb'))
+        elif result.get("status") == "failed":
+            error_msg = result.get("error", "Unbekannter Fehler")
+            await update.message.reply_text(f"❌ Fehler bei der Bildgenerierung: {error_msg}")
+        else:
+            # Fallback to legacy method
+            image_path = await sd_service.generate_image(prompt)
+            await update.message.reply_photo(photo=open(image_path, 'rb'))
+            
     except Exception as e:
-        await update.message.reply_text(f"Fehler bei der Bildgenerierung: {e}")
+        logger.error(f"Image generation failed: {e}")
+        # Fallback to legacy method
+        try:
+            image_path = await sd_service.generate_image(prompt)
+            await update.message.reply_photo(photo=open(image_path, 'rb'))
+        except Exception as legacy_error:
+            await update.message.reply_text(f"Fehler bei der Bildgenerierung: {legacy_error}")
 
 async def generate_animation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Generiert eine Animation basierend auf dem User-Prompt."""

@@ -1,0 +1,61 @@
+name: minimal_image_pipeline
+description: Minimal workflow for image generation and upscaling
+version: "1.0"
+
+steps:
+  - name: txt2img
+    type: txt2img
+    description: Generate initial image from text prompt
+    params:
+      prompt: "${prompt}"
+      model: stable-diffusion
+      width: 512
+      height: 512
+      steps: 20
+      cfg_scale: 7.5
+      seed: ${seed:-null}
+    outputs:
+      - image_path
+      - metadata
+
+  - name: upscale
+    type: upscale
+    description: Upscale the generated image
+    depends_on: txt2img
+    params:
+      input: "${txt2img.outputs.image_path}"
+      scale: 2
+      model: esrgan
+      denoise_strength: 0.5
+    outputs:
+      - image_path
+      - dimensions
+
+  - name: save_artifacts
+    type: save_artifact
+    description: Save final artifacts
+    depends_on: upscale
+    params:
+      inputs:
+        - "${txt2img.outputs.image_path}"
+        - "${upscale.outputs.image_path}"
+      output_dir: "/artifacts"
+      metadata:
+        prompt: "${prompt}"
+        pipeline: "txt2img_upscale"
+        timestamp: "${timestamp}"
+    outputs:
+      - artifact_paths
+      - manifest_path
+
+metadata:
+  author: LangGraph System
+  tags:
+    - image-generation
+    - upscaling
+    - stable-diffusion
+  requirements:
+    - service: sd_service
+      methods: ["generate_image"]
+    - service: upscale_service
+      methods: ["upscale_image"]
