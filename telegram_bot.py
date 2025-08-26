@@ -28,6 +28,7 @@ from services.anim_service import get_anim_service
 
 # Import LangGraph integration
 from ai.graph.run import process_telegram_command
+from ai import start_graph  # Direct graph entry point
 
 # Initialize RBAC Service
 rbac = RBACService()
@@ -173,6 +174,12 @@ async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     try:
         # Use LangGraph for image generation
+        # Alternative: Can also use start_graph directly:
+        # result = await start_graph(
+        #     session_id=f"tg-{update.effective_chat.id}-{datetime.now().timestamp()}",
+        #     goal=f"Generate image: {prompt}",
+        #     user_ctx={"user_id": str(update.effective_user.id), "chat_id": str(update.effective_chat.id)}
+        # )
         result = await process_telegram_command(
             command="img",
             args=context.args,
@@ -208,6 +215,44 @@ async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await update.message.reply_photo(photo=open(image_path, 'rb'))
         except Exception as legacy_error:
             await update.message.reply_text(f"Fehler bei der Bildgenerierung: {legacy_error}")
+
+async def upscale_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Upscale an image using the graph."""
+    await update.message.reply_text("⏳ Upscaling image...")
+    
+    try:
+        # Import start_graph if available
+        from ai.graph.run import start_graph
+        
+        # Hook for graph-based upscaling
+        # This demonstrates how to use start_graph directly
+        user_id = str(update.effective_user.id)
+        chat_id = str(update.effective_chat.id)
+        
+        result = await start_graph(
+            session_id=f"upscale-{chat_id}-{datetime.now().timestamp()}",
+            goal="Upscale the provided image",
+            user_ctx={
+                "user_id": user_id,
+                "chat_id": chat_id,
+                "command": "upscale",
+                "args": context.args
+            }
+        )
+        
+        if result.get("status") == "completed":
+            await update.message.reply_text("✅ Image upscaled successfully!")
+            # Send upscaled image if available in artifacts
+            import os
+            for artifact_path in result.get("artifacts", []):
+                if os.path.exists(artifact_path):
+                    await update.message.reply_photo(photo=open(artifact_path, 'rb'))
+        else:
+            await update.message.reply_text(f"❌ Upscaling failed: {result.get('error', 'Unknown error')}")
+            
+    except Exception as e:
+        logger.error(f"Upscale failed: {e}")
+        await update.message.reply_text(f"❌ Error during upscaling: {str(e)}")
 
 async def generate_animation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Generiert eine Animation basierend auf dem Prompt"""
@@ -290,6 +335,7 @@ async def main() -> None:
     app.add_handler(CommandHandler("revoke_role", handle_revoke_role))
     app.add_handler(CommandHandler("status", system_status))
     app.add_handler(CommandHandler("img", generate_image))
+    app.add_handler(CommandHandler("upscale", upscale_image))
     app.add_handler(CommandHandler("anim", generate_animation))
 
     # --- Start Polling ---
