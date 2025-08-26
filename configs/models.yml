@@ -1,0 +1,356 @@
+# Model Provider Routing Configuration
+# Definiert welche Modelle für welche Aufgaben verwendet werden
+
+# === Global Model Routing ===
+routing:
+  # Primary models für verschiedene Rollen
+  planner: "claude-sonnet-4"     # Hohe Reasoning-Qualität für Planning
+  executor: "claude-opus-4.1"    # Balanciert Speed/Quality für Execution
+  reviewer: "gpt-4-turbo"        # Review und Quality-Check
+  
+  # Fallback-Kette wenn Primary nicht verfügbar
+  fallback_chain:
+    - "ollama:llama3.1:70b"      # Lokaler Fallback
+    - "gpt-4"                    # Externe Fallback
+    - "claude-haiku"             # Schnelle Fallback für einfache Tasks
+  
+  # Load balancing für High-Volume
+  load_balancing:
+    enable: true
+    strategy: "round_robin"      # "round_robin", "least_latency", "cost_optimized"
+    health_check_interval_s: 30
+
+# === Provider Configurations ===
+providers:
+  
+  # === OpenAI ===
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    organization: "${OPENAI_ORG_ID}"
+    base_url: "https://api.openai.com/v1"
+    
+    models:
+      gpt-4-turbo:
+        max_tokens: 4096
+        context_window: 128000
+        cost_per_1k_input: 0.01
+        cost_per_1k_output: 0.03
+        capabilities: ["chat", "tools", "vision"]
+        
+      gpt-4:
+        max_tokens: 4096
+        context_window: 8192
+        cost_per_1k_input: 0.03
+        cost_per_1k_output: 0.06
+        capabilities: ["chat", "tools"]
+        
+      gpt-3.5-turbo:
+        max_tokens: 4096
+        context_window: 16384
+        cost_per_1k_input: 0.0005
+        cost_per_1k_output: 0.0015
+        capabilities: ["chat", "tools"]
+    
+    limits:
+      requests_per_minute: 3500
+      tokens_per_minute: 40000
+      timeout_s: 60
+      max_retries: 3
+      
+    error_handling:
+      retry_on_errors: ["rate_limit", "server_error", "timeout"]
+      circuit_breaker:
+        failure_threshold: 5
+        recovery_timeout_s: 300
+
+  # === Anthropic ===
+  anthropic:
+    api_key: "${ANTHROPIC_API_KEY}"
+    base_url: "https://api.anthropic.com"
+    
+    models:
+      claude-sonnet-4:
+        max_tokens: 4096
+        context_window: 200000
+        cost_per_1k_input: 0.003
+        cost_per_1k_output: 0.015
+        capabilities: ["chat", "tools", "analysis"]
+        
+      claude-opus-4.1:
+        max_tokens: 4096  
+        context_window: 200000
+        cost_per_1k_input: 0.015
+        cost_per_1k_output: 0.075
+        capabilities: ["chat", "tools", "reasoning"]
+        
+      claude-haiku:
+        max_tokens: 4096
+        context_window: 200000
+        cost_per_1k_input: 0.00025
+        cost_per_1k_output: 0.00125
+        capabilities: ["chat", "speed"]
+    
+    limits:
+      requests_per_minute: 1000
+      tokens_per_minute: 50000
+      timeout_s: 90
+      max_retries: 3
+
+  # === Ollama (Local) ===
+  ollama:
+    base_url: "${OLLAMA_HOST}/v1"
+    api_key: "ollama"  # Dummy für Kompatibilität
+    
+    models:
+      "llama3.1:70b":
+        max_tokens: 8192
+        context_window: 32768
+        cost_per_1k_input: 0.0  # Lokal
+        cost_per_1k_output: 0.0
+        capabilities: ["chat", "reasoning", "local"]
+        
+      "llama3.1:8b":
+        max_tokens: 8192
+        context_window: 32768  
+        cost_per_1k_input: 0.0
+        cost_per_1k_output: 0.0
+        capabilities: ["chat", "speed", "local"]
+        
+      "mistral:7b":
+        max_tokens: 4096
+        context_window: 8192
+        cost_per_1k_input: 0.0
+        cost_per_1k_output: 0.0
+        capabilities: ["chat", "local"]
+    
+    limits:
+      requests_per_minute: 60    # GPU-limitiert
+      tokens_per_minute: 8000
+      timeout_s: 300
+      max_retries: 2
+      
+    performance:
+      batch_size: 1
+      gpu_memory_threshold: 0.8
+      auto_scale: false
+
+# === Tool-Specific Model Overrides ===
+tool_model_mapping:
+  
+  # Bildgenerierung - Braucht keine LLMs
+  sd_txt2img:
+    model_required: false
+    
+  # Text-Tasks - Nutzen verschiedene Modelle je nach Anforderung
+  email_compose:
+    primary: "claude-sonnet-4"    # Gute Schreibqualität
+    fallback: "gpt-4"
+    requirements:
+      max_tokens: 2000
+      creativity: high
+      
+  email_classify:
+    primary: "gpt-3.5-turbo"      # Schnell für einfache Klassifikation
+    fallback: "claude-haiku"
+    requirements:
+      max_tokens: 500
+      speed: high
+      
+  code_generation:
+    primary: "claude-opus-4.1"    # Beste Code-Qualität
+    fallback: "gpt-4-turbo"
+    requirements:
+      max_tokens: 4000
+      reasoning: high
+      
+  text_analysis:
+    primary: "claude-sonnet-4"    # Gute Analyse-Fähigkeiten
+    fallback: "gpt-4"
+    
+  quick_response:
+    primary: "gpt-3.5-turbo"      # Speed over quality
+    fallback: "claude-haiku"
+    requirements:
+      max_tokens: 1000
+      latency_target_ms: 2000
+
+# === Per-Tool Rate Limits ===
+tool_limits:
+  
+  # High-cost tools
+  sd_txt2img:
+    requests_per_hour: 100
+    concurrent_executions: 1     # GPU-limitiert
+    timeout_s: 60
+    cost_limit_per_hour: 5.0
+    
+  upscale_image:
+    requests_per_hour: 50
+    concurrent_executions: 1
+    timeout_s: 120
+    cost_limit_per_hour: 3.0
+    
+  create_animation:
+    requests_per_hour: 20
+    concurrent_executions: 1
+    timeout_s: 300
+    cost_limit_per_hour: 10.0
+    
+  # Medium-cost tools  
+  text_to_speech:
+    requests_per_hour: 200
+    concurrent_executions: 3
+    timeout_s: 30
+    cost_limit_per_hour: 2.0
+    
+  speech_to_text:
+    requests_per_hour: 300
+    concurrent_executions: 5
+    timeout_s: 60
+    cost_limit_per_hour: 1.0
+    
+  # Low-cost tools
+  send_email:
+    requests_per_hour: 500
+    concurrent_executions: 10
+    timeout_s: 30
+    cost_limit_per_hour: 0.0     # Kein LLM-Cost
+    
+  analyze_image:
+    requests_per_hour: 200
+    concurrent_executions: 5
+    timeout_s: 30
+    cost_limit_per_hour: 3.0     # Vision-Model costs
+
+# === Cost Management ===
+cost_controls:
+  
+  # Global budget limits
+  daily_budget_usd: 50.0
+  weekly_budget_usd: 300.0
+  monthly_budget_usd: 1000.0
+  
+  # Per-user limits
+  user_limits:
+    guest:
+      daily_budget_usd: 2.0
+      hourly_requests: 20
+      
+    user:
+      daily_budget_usd: 10.0
+      hourly_requests: 100
+      
+    admin:
+      daily_budget_usd: 50.0
+      hourly_requests: 1000
+  
+  # Alert thresholds
+  alerts:
+    daily_threshold_pct: 80      # Alert bei 80% des Tagesbudgets
+    unusual_spending_factor: 3.0  # Alert wenn 3x normal
+    high_cost_per_request: 1.0   # Alert wenn >$1 per request
+    
+  # Cost optimization
+  optimization:
+    auto_downgrade_expensive: true    # Auto-switch zu günstigeren Modellen
+    batch_similar_requests: true      # Batching für Effizienz
+    cache_expensive_results: true     # Cache teure Ergebnisse
+    cache_ttl_hours: 24
+
+# === Performance Monitoring ===
+monitoring:
+  
+  # Metrics collection
+  collect_metrics: true
+  metrics_retention_days: 30
+  
+  # Performance thresholds
+  thresholds:
+    max_latency_ms: 30000        # 30s max latency
+    min_success_rate: 0.95       # 95% success rate
+    max_error_rate: 0.05         # 5% error rate
+    
+  # Auto-scaling triggers
+  scaling:
+    enable_auto_scaling: false   # Für zukünftige Multi-Instance Setups
+    scale_up_threshold: 0.8      # CPU/Memory threshold
+    scale_down_threshold: 0.3
+    cooldown_minutes: 10
+
+# === Environment-Specific Overrides ===
+environments:
+  
+  development:
+    # Günstigere Modelle für Development
+    routing:
+      planner: "gpt-3.5-turbo"
+      executor: "gpt-3.5-turbo"
+      reviewer: "claude-haiku"
+    
+    cost_controls:
+      daily_budget_usd: 5.0
+      
+    tool_limits:
+      sd_txt2img:
+        requests_per_hour: 20
+        
+  testing:
+    # Mock-Provider für Tests
+    providers:
+      mock:
+        models:
+          mock-gpt-4:
+            max_tokens: 4096
+            cost_per_1k_input: 0.0
+            cost_per_1k_output: 0.0
+            capabilities: ["chat", "mock"]
+    
+    routing:
+      planner: "mock-gpt-4"
+      executor: "mock-gpt-4"
+      reviewer: "mock-gpt-4"
+      
+  production:
+    # Produktions-optimierte Einstellungen
+    cost_controls:
+      daily_budget_usd: 100.0
+      
+    monitoring:
+      collect_metrics: true
+      alert_on_failures: true
+      
+    tool_limits:
+      sd_txt2img:
+        requests_per_hour: 500
+
+# === Advanced Features ===
+advanced:
+  
+  # Model selection based on content analysis
+  intelligent_routing:
+    enable: true
+    analyze_complexity: true     # Route komplexe Tasks zu besseren Modellen
+    analyze_language: true       # Language-spezifische Modell-Auswahl
+    analyze_domain: true         # Domain-expertise routing (code, creative, etc.)
+  
+  # A/B testing für Model performance
+  ab_testing:
+    enable: false
+    experiments:
+      - name: "planner_comparison"
+        traffic_split: 0.1       # 10% traffic
+        models: ["claude-sonnet-4", "gpt-4-turbo"]
+        metrics: ["latency", "cost", "quality"]
+        
+  # Caching strategies
+  caching:
+    enable: true
+    strategies:
+      semantic_cache: true       # Cache ähnliche Prompts
+      result_cache: true         # Cache teure Results
+      model_cache: true          # Cache Modell-Responses
+    
+    ttl:
+      semantic_cache_hours: 1
+      result_cache_hours: 24
+      model_cache_hours: 6
