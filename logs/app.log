@@ -36,3 +36,25 @@
 2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
 2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
 2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
+{"timestamp": "2025-08-26 18:02:01,925", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 18:02:01,926", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 18:02:01,927", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 18:02:01,927", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 18:02:04,521", "level": "CRITICAL", "name": "core.config", "message": "FATAL: Configuration validation error: 1 validation error for AppSettings\nTELEGRAM_BOT_TOKEN\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"}
+{"timestamp": "2025-08-26 18:02:54,714", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 18:02:54,715", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 18:02:54,715", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 18:02:54,716", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 18:02:57,097", "level": "CRITICAL", "name": "core.config", "message": "FATAL: Configuration validation error: 1 validation error for AppSettings\nTELEGRAM_BOT_TOKEN\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"}
+{"timestamp": "2025-08-26 18:25:58,222", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 18:25:58,224", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 18:25:58,224", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 18:25:58,224", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 18:27:52,099", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 18:27:52,100", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 18:27:52,101", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 18:27:52,101", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 18:34:18,512", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}

@@ -76,9 +76,8 @@ class PersistentCheckpointer(BaseCheckpointSaver):
     
     def __init__(self, db_path: str = None):
         if db_path is None:
-            # Use workspace-relative path instead of absolute /data
-            workspace_path = os.environ.get("WORKSPACE_PATH", "/workspace")
-            db_path = os.path.join(workspace_path, "data", "graph", "checkpoints.db")
+            # Use a path relative to the project root.
+            db_path = Path.cwd() / "data" / "graph" / "checkpoints.db"
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
@@ -390,10 +389,19 @@ async def execute_node(state: GraphState) -> GraphState:
             state["status"] = "completed"
         
     except Exception as e:
-        logger.error(f"Step execution failed: {e}")
+        logger.error(f"Step execution failed: {e}", exc_info=True)
         state["status"] = "failed"
         state["error"] = str(e)
         
+        # Write to Dead-Letter Queue
+        from core.dlq import write_to_dlq
+        write_to_dlq(
+            session_id=state["session_id"],
+            step_name=current_step,
+            context=state["user_context"],
+            error=str(e)
+        )
+
     return state
 
 async def report_node(state: GraphState) -> GraphState:

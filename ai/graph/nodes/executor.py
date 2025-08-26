@@ -9,6 +9,9 @@ import os
 
 from core.workflow_engine import submit
 from core.logging import logger
+from core.security import RBACService, Role
+from core.audit import audit_tool_call
+from core.monitoring import ENGINE_STEP_DURATION_MS, ENGINE_STEP_ERRORS_TOTAL
 
 # Get workspace path
 workspace_path = os.environ.get("WORKSPACE_PATH", "/workspace")
@@ -53,6 +56,7 @@ class WorkflowExecutor:
     
     def __init__(self):
         self.execution_cache: Dict[str, Dict] = {}
+        self.rbac = RBACService()
         
     async def execute_step(
         self,
@@ -62,7 +66,7 @@ class WorkflowExecutor:
         previous_results: List[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Execute a workflow step with idempotency.
+        Execute a workflow step with idempotency, RBAC checks, and auditing.
         
         Args:
             step_name: Name of the step to execute
@@ -73,6 +77,40 @@ class WorkflowExecutor:
         Returns:
             Execution result dictionary
         """
+        user_id = context.get("user_id", "unknown")
+        # TODO: Fetch user role from a user database or the session context.
+        user_role = context.get("user_role", Role.GUEST)
+
+        # Audit the attempt
+        audit_tool_call(
+            correlation_id=correlation_id,
+            user_id=user_id,
+            tool_name=step_name,
+            params=context,
+            status="ATTEMPT"
+        )
+
+        # RBAC Check
+        if not self.rbac.check_permission(user_role, "execute", step_name):
+            audit_tool_call(
+                correlation_id=correlation_id,
+                user_id=user_id,
+                tool_name=step_name,
+                params=context,
+                status="DENIED",
+                message=f"User with role '{user_role.value}' is not allowed to execute tool '{step_name}'."
+            )
+            # This exception will be caught by the graph and reported to the user.
+            raise PermissionError(f"You do not have permission to use the '{step_name}' tool.")
+
+        audit_tool_call(
+            correlation_id=correlation_id,
+            user_id=user_id,
+            tool_name=step_name,
+            params=context,
+            status="ALLOWED"
+        )
+
         # Check cache for idempotency
         if correlation_id in self.execution_cache:
             logger.info(f"Returning cached result for {correlation_id}")
@@ -97,6 +135,7 @@ class WorkflowExecutor:
         # Submit to engine with correlation ID
         logger.info(f"Submitting workflow for step: {step_name} (correlation_id: {correlation_id})")
         
+        start_time = datetime.now()
         try:
             result = await submit(
                 workflow=workflow,
@@ -110,10 +149,18 @@ class WorkflowExecutor:
             # Cache result
             self.execution_cache[correlation_id] = processed_result
             
+            # Record step duration metric
+            duration_ms = (datetime.now() - start_time).total_seconds() * 1000
+            ENGINE_STEP_DURATION_MS.labels(step_name=step_name).observe(duration_ms)
+
             return processed_result
             
         except Exception as e:
             logger.error(f"Workflow execution failed for {step_name}: {e}")
+
+            # Record error metric
+            ENGINE_STEP_ERRORS_TOTAL.labels(step_name=step_name).inc()
+
             error_result = {
                 "step": step_name,
                 "status": "error",

@@ -8,9 +8,8 @@ from email.message import EmailMessage
 from pathlib import Path
 from typing import Dict, List, Optional
 
-import core.env
+from core.config import get_settings
 from agent.agent import Agent
-from core.config import EmailConfig, load_config
 from core.errors import ConfigError, ExternalToolError
 from core.logging import logger
 
