@@ -34,8 +34,8 @@ class EmailConfig(BaseModel):
     icloud: dict
 
 class AvatarConfig(BaseModel):
-    sadtalker_checkpoints: FilePath
-    esrgan_model_path: FilePath
+    sadtalker_checkpoints: Path
+    esrgan_model_path: Path
     fps: int = Field(25, gt=0)
     bitrate: str = "5000k"
 
@@ -104,3 +104,32 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
+# --- Global Settings Provider ---
+from types import SimpleNamespace
+
+def get_settings():
+    """
+    Loads all configurations and returns them as a single settings object.
+    This is a compatibility function to support legacy code that expects
+    a single settings object.
+    """
+    settings = SimpleNamespace()
+
+    # Load YAML-based configs
+    try:
+        settings.phone = load_config('phone', PhoneConfig)
+        settings.email = load_config('email', EmailConfig)
+        settings.avatar = load_config('avatar', AvatarConfig)
+        settings.sd = load_config('sd', SDConfig)
+        settings.routing = load_config('routing', RoutingConfig)
+        settings.telegram = load_config('telegram', TelegramConfig)
+    except FileNotFoundError as e:
+        print(f"Warning: Could not load a config file: {e}. Some features may not work.")
+
+    # Load environment-based settings from core.env
+    from core import env
+    settings.app = env
+
+    return settings
