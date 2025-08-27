@@ -36,25 +36,96 @@
 2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
 2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
 2025-08-26 03:30:06,986 - root - INFO - Converted tool call 'generate_animation' to 3 steps
-{"timestamp": "2025-08-26 18:02:01,925", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:02:01,926", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:02:01,927", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:02:01,927", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
-{"timestamp": "2025-08-26 18:02:04,521", "level": "CRITICAL", "name": "core.config", "message": "FATAL: Configuration validation error: 1 validation error for AppSettings\nTELEGRAM_BOT_TOKEN\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"}
-{"timestamp": "2025-08-26 18:02:54,714", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:02:54,715", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:02:54,715", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:02:54,716", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
-{"timestamp": "2025-08-26 18:02:57,097", "level": "CRITICAL", "name": "core.config", "message": "FATAL: Configuration validation error: 1 validation error for AppSettings\nTELEGRAM_BOT_TOKEN\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"}
-{"timestamp": "2025-08-26 18:25:58,222", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:25:58,224", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:25:58,224", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:25:58,224", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
-{"timestamp": "2025-08-26 18:27:52,099", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:27:52,100", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:27:52,101", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:27:52,101", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
-{"timestamp": "2025-08-26 18:34:18,512", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
-{"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
-{"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
-{"timestamp": "2025-08-26 18:34:18,513", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 19:06:13,565", "level": "ERROR", "name": "root", "message": "Failed to initialize EmailService: Email credentials (e.g., GMAIL_USER, GMAIL_PASS) not set in environment."}
+{"timestamp": "2025-08-26 19:06:13,566", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:06:13,566", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:06:13,566", "level": "INFO", "name": "root", "message": "AnimService initialized. FFMPEG path: ffmpeg"}
+{"timestamp": "2025-08-26 19:06:13,566", "level": "INFO", "name": "root", "message": "Initializing GCZ Agent..."}
+{"timestamp": "2025-08-26 19:06:13,568", "level": "INFO", "name": "root", "message": "Routing config loaded. Planner: gpt-oss:20b"}
+{"timestamp": "2025-08-26 19:06:13,656", "level": "INFO", "name": "root", "message": "Ollama client configured for endpoint: http://localhost:11434"}
+{"timestamp": "2025-08-26 19:06:13,656", "level": "INFO", "name": "root", "message": "ToolsRegistry initialized."}
+{"timestamp": "2025-08-26 19:06:13,661", "level": "INFO", "name": "root", "message": "Loaded 8 tool(s) from /app/configs/tools.yml."}
+{"timestamp": "2025-08-26 19:06:13,996", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 19:06:13,996", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 19:06:13,996", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 19:06:13,996", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 19:07:18,308", "level": "ERROR", "name": "root", "message": "Failed to initialize EmailService: Email credentials (e.g., GMAIL_USER, GMAIL_PASS) not set in environment."}
+{"timestamp": "2025-08-26 19:07:18,309", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:07:18,309", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:07:18,309", "level": "INFO", "name": "root", "message": "AnimService initialized. FFMPEG path: ffmpeg"}
+{"timestamp": "2025-08-26 19:07:18,309", "level": "INFO", "name": "root", "message": "Initializing GCZ Agent..."}
+{"timestamp": "2025-08-26 19:07:18,310", "level": "INFO", "name": "root", "message": "Routing config loaded. Planner: gpt-oss:20b"}
+{"timestamp": "2025-08-26 19:07:18,385", "level": "INFO", "name": "root", "message": "Ollama client configured for endpoint: http://localhost:11434"}
+{"timestamp": "2025-08-26 19:07:18,385", "level": "INFO", "name": "root", "message": "ToolsRegistry initialized."}
+{"timestamp": "2025-08-26 19:07:18,390", "level": "INFO", "name": "root", "message": "Loaded 8 tool(s) from /app/configs/tools.yml."}
+{"timestamp": "2025-08-26 19:07:18,701", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 19:07:18,701", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 19:07:18,701", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 19:07:18,702", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 19:12:26,921", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 19:12:26,921", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 19:12:26,921", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 19:12:26,921", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-26 19:12:28,725", "level": "ERROR", "name": "root", "message": "Failed to initialize EmailService: Email credentials (e.g., GMAIL_USER, GMAIL_PASS) not set in environment."}
+{"timestamp": "2025-08-26 19:12:28,726", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:12:28,726", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-26 19:12:28,727", "level": "INFO", "name": "root", "message": "AnimService initialized. FFMPEG path: ffmpeg"}
+{"timestamp": "2025-08-26 19:12:28,727", "level": "INFO", "name": "root", "message": "Initializing GCZ Agent..."}
+{"timestamp": "2025-08-26 19:12:28,729", "level": "INFO", "name": "root", "message": "Routing config loaded. Planner: gpt-oss:20b"}
+{"timestamp": "2025-08-26 19:12:28,846", "level": "INFO", "name": "root", "message": "Ollama client configured for endpoint: http://localhost:11434"}
+{"timestamp": "2025-08-26 19:12:28,847", "level": "INFO", "name": "root", "message": "ToolsRegistry initialized."}
+{"timestamp": "2025-08-26 19:12:28,852", "level": "INFO", "name": "root", "message": "Loaded 8 tool(s) from /app/configs/tools.yml."}
+{"timestamp": "2025-08-26 19:16:18,178", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-26 19:16:18,178", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-26 19:16:18,179", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-26 19:16:18,179", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-27 12:36:57,597", "level": "INFO", "name": "root", "message": "Starting Email Poller Service..."}
+{"timestamp": "2025-08-27 12:36:57,601", "level": "CRITICAL", "name": "root", "message": "Email Poller failed to initialize: 2 validation errors for PhoneConfig\nsip_server\n  Field required [type=missing, input_value={'enabled': False, 'bares...d_segment_duration': 5}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\nsip_user\n  Field required [type=missing, input_value={'enabled': False, 'bares...d_segment_duration': 5}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"}
+{"timestamp": "2025-08-27 12:36:57,859", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-27 12:36:57,859", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-27 12:36:57,862", "level": "ERROR", "name": "root", "message": "Failed to initialize AnimService: 2 validation errors for PhoneConfig\nsip_server\n  Field required [type=missing, input_value={'enabled': False, 'bares...d_segment_duration': 5}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\nsip_user\n  Field required [type=missing, input_value={'enabled': False, 'bares...d_segment_duration': 5}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"}
+{"timestamp": "2025-08-27 12:36:57,862", "level": "INFO", "name": "root", "message": "Initializing GCZ Agent..."}
+{"timestamp": "2025-08-27 12:36:57,864", "level": "ERROR", "name": "root", "message": "Failed to initialize Agent: 2 validation errors for PhoneConfig\nsip_server\n  Field required [type=missing, input_value={'enabled': False, 'bares...d_segment_duration': 5}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\nsip_user\n  Field required [type=missing, input_value={'enabled': False, 'bares...d_segment_duration': 5}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing"}
+{"timestamp": "2025-08-27 12:36:58,208", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-27 12:36:58,208", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-27 12:36:58,209", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-27 12:36:58,209", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-27 12:36:58,214", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-27 12:39:05,862", "level": "INFO", "name": "root", "message": "Starting Email Poller Service..."}
+{"timestamp": "2025-08-27 12:39:05,871", "level": "CRITICAL", "name": "root", "message": "Email Poller failed to initialize: 2 validation errors for AvatarConfig\nsadtalker_checkpoints\n  Path does not point to a file [type=path_not_file, input_value='C:/path/to/SadTalker/checkpoints', input_type=str]\nesrgan_model_path\n  Path does not point to a file [type=path_not_file, input_value='C:/path/to/Real-ESRGAN/w...s/RealESRGAN_x4plus.pth', input_type=str]"}
+{"timestamp": "2025-08-27 12:39:05,962", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-27 12:39:05,962", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-27 12:39:05,968", "level": "ERROR", "name": "root", "message": "Failed to initialize AnimService: 2 validation errors for AvatarConfig\nsadtalker_checkpoints\n  Path does not point to a file [type=path_not_file, input_value='C:/path/to/SadTalker/checkpoints', input_type=str]\nesrgan_model_path\n  Path does not point to a file [type=path_not_file, input_value='C:/path/to/Real-ESRGAN/w...s/RealESRGAN_x4plus.pth', input_type=str]"}
+{"timestamp": "2025-08-27 12:39:05,968", "level": "INFO", "name": "root", "message": "Initializing GCZ Agent..."}
+{"timestamp": "2025-08-27 12:39:05,974", "level": "ERROR", "name": "root", "message": "Failed to initialize Agent: 2 validation errors for AvatarConfig\nsadtalker_checkpoints\n  Path does not point to a file [type=path_not_file, input_value='C:/path/to/SadTalker/checkpoints', input_type=str]\nesrgan_model_path\n  Path does not point to a file [type=path_not_file, input_value='C:/path/to/Real-ESRGAN/w...s/RealESRGAN_x4plus.pth', input_type=str]"}
+{"timestamp": "2025-08-27 12:39:06,310", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-27 12:39:06,310", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-27 12:39:06,311", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-27 12:39:06,311", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-27 12:39:06,313", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-27 12:40:55,906", "level": "INFO", "name": "root", "message": "Starting Email Poller Service..."}
+{"timestamp": "2025-08-27 12:40:56,102", "level": "INFO", "name": "root", "message": "Initializing GCZ Agent..."}
+{"timestamp": "2025-08-27 12:40:56,112", "level": "INFO", "name": "root", "message": "Routing config loaded. Planner: gpt-oss:20b"}
+{"timestamp": "2025-08-27 12:40:56,140", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-27 12:40:56,141", "level": "INFO", "name": "root", "message": "SDService initialized. API: http://127.0.0.1:8188, Artifacts: artifacts/images"}
+{"timestamp": "2025-08-27 12:40:56,150", "level": "INFO", "name": "root", "message": "AnimService initialized. FFMPEG path: ffmpeg"}
+{"timestamp": "2025-08-27 12:40:56,150", "level": "INFO", "name": "root", "message": "Initializing GCZ Agent..."}
+{"timestamp": "2025-08-27 12:40:56,159", "level": "INFO", "name": "root", "message": "Routing config loaded. Planner: gpt-oss:20b"}
+{"timestamp": "2025-08-27 12:40:56,175", "level": "INFO", "name": "root", "message": "Ollama client configured for endpoint: http://localhost:11434"}
+{"timestamp": "2025-08-27 12:40:56,175", "level": "INFO", "name": "root", "message": "ToolsRegistry initialized."}
+{"timestamp": "2025-08-27 12:40:56,183", "level": "INFO", "name": "root", "message": "Loaded 8 tool(s) from /app/configs/tools.yml."}
+{"timestamp": "2025-08-27 12:40:56,184", "level": "INFO", "name": "root", "message": "Loaded 0 previously processed email IDs."}
+{"timestamp": "2025-08-27 12:40:56,213", "level": "ERROR", "name": "root", "message": "Cannot list unread emails, connection failed: IMAP connection failed: b'[AUTHENTICATIONFAILED] Invalid credentials (Failure)'"}
+{"timestamp": "2025-08-27 12:40:56,270", "level": "INFO", "name": "root", "message": "Ollama client configured for endpoint: http://localhost:11434"}
+{"timestamp": "2025-08-27 12:40:56,270", "level": "INFO", "name": "root", "message": "ToolsRegistry initialized."}
+{"timestamp": "2025-08-27 12:40:56,276", "level": "INFO", "name": "root", "message": "Loaded 8 tool(s) from /app/configs/tools.yml."}
+{"timestamp": "2025-08-27 12:40:56,693", "level": "INFO", "name": "root", "message": "Registered tool: generate_image"}
+{"timestamp": "2025-08-27 12:40:56,693", "level": "INFO", "name": "root", "message": "Registered tool: upscale_image"}
+{"timestamp": "2025-08-27 12:40:56,693", "level": "INFO", "name": "root", "message": "Registered tool: generate_animation"}
+{"timestamp": "2025-08-27 12:40:56,693", "level": "INFO", "name": "root", "message": "Registered tool: call_service"}
+{"timestamp": "2025-08-27 12:40:56,696", "level": "INFO", "name": "root", "message": "Starting Telegram Bot..."}
+{"timestamp": "2025-08-27 12:40:56,796", "level": "INFO", "name": "root", "message": "Autosend consumer task started."}
+{"timestamp": "2025-08-27 12:40:56,796", "level": "INFO", "name": "root", "message": "All Telegram handlers have been registered."}
+{"timestamp": "2025-08-27 12:40:56,801", "level": "INFO", "name": "root", "message": "Monitoring-Service gestartet auf Port 9090 (localhost)"}
+{"timestamp": "2025-08-27 12:40:56,801", "level": "INFO", "name": "root", "message": "Starting Telegram autosend consumer..."}
+{"timestamp": "2025-08-27 12:40:57,171", "level": "INFO", "name": "httpx", "message": "HTTP Request: POST https://api.telegram.org/botDEIN_TELEGRAM_BOT_TOKEN/getMe \"HTTP/1.1 404 Not Found\""}

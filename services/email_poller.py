@@ -3,13 +3,12 @@ import os
 import time
 from typing import Dict
 
-import core.env
 from telegram import Bot
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
 
 from agent.agent import Agent
-from core.config import load_config, TelegramConfig
+from core.config import get_settings
 from core.logging import logger
 from services.email_service import EmailService
 
@@ -63,13 +62,13 @@ async def main():
 
     # --- Initialization ---
     try:
-        telegram_config = load_config('telegram', TelegramConfig)
-        if not telegram_config.admin_ids:
-            logger.critical("No admin_ids found in configs/telegram.yml. Cannot send notifications.")
+        settings = get_settings()
+        if not settings.telegram.admin_ids:
+            logger.critical("No admin_ids found in the configuration. Cannot send notifications.")
             return
         
-        notification_user_id = telegram_config.admin_ids[0]
-        bot_token = core.env.TELEGRAM_BOT_TOKEN
+        notification_user_id = settings.telegram.admin_ids[0]
+        bot_token = settings.app.TELEGRAM_BOT_TOKEN
         if not bot_token:
             raise ValueError("TELEGRAM_BOT_TOKEN not set.")
 

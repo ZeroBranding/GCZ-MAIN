@@ -1,5 +1,9 @@
 enabled: false
 
+# SIP connection details required for the phone service.
+sip_server: "sip.example.com"
+sip_user: "username"
+
 baresip:
   executable: "external/baresip/baresip.exe"
   config_path: "configs/baresip"

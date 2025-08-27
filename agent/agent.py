@@ -20,14 +20,12 @@ class Agent:
         logger.info("Initializing GCZ Agent...")
 
         # 1. Load Configuration
-        try:
-            self.routing_config = load_config('routing', RoutingConfig)
-            logger.info(f"Routing config loaded. Planner: {self.routing_config.llm_planner}")
-        except Exception as e:
-            raise ConfigError(f"Failed to load routing configuration: {e}")
+        self.settings = get_settings()
+        self.routing_config = self.settings.routing
+        logger.info(f"Routing config loaded. Planner: {self.routing_config.llm_planner}")
 
         # 2. Setup Ollama Client
-        ollama_host = core.env.OLLAMA_HOST
+        ollama_host = self.settings.app.OLLAMA_HOST
         if not ollama_host:
             raise EnvError("OLLAMA_HOST environment variable is not set.")
 

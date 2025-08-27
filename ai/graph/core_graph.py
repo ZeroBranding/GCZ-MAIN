@@ -389,19 +389,10 @@ async def execute_node(state: GraphState) -> GraphState:
             state["status"] = "completed"
         
     except Exception as e:
-        logger.error(f"Step execution failed: {e}", exc_info=True)
+        logger.error(f"Step execution failed: {e}")
         state["status"] = "failed"
         state["error"] = str(e)
         
-        # Write to Dead-Letter Queue
-        from core.dlq import write_to_dlq
-        write_to_dlq(
-            session_id=state["session_id"],
-            step_name=current_step,
-            context=state["user_context"],
-            error=str(e)
-        )
-
     return state
 
 async def report_node(state: GraphState) -> GraphState:

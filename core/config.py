@@ -1,64 +1,48 @@
-import logging
 from pathlib import Path
 from typing import List, Optional
 
 import yaml
-from pydantic import BaseModel, Field, ValidationError
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, Field, FilePath
 
 # --- Base Path ---
 BASE_DIR = Path(__file__).resolve().parent.parent
-logger = logging.getLogger(__name__)
 
-# --- Environment-based Settings ---
-
-class AppSettings(BaseSettings):
+# --- Environment Loading ---
+def load_env():
     """
-    Main application settings loaded from environment variables.
-    The .env file is loaded automatically by pydantic-settings.
+    Loads environment variables from the .env file if it exists.
+    This is part of the legacy config system and is superseded by core.env.
+    It's modified to not crash if .env is missing.
     """
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
+    from dotenv import load_dotenv
+    load_dotenv()
 
-    # --- Core Required Settings ---
-    TELEGRAM_BOT_TOKEN: str = Field(..., description="Your Telegram Bot API Token from @BotFather.")
+# load_env() # This is now handled by core.env
 
-    # --- General & Core ---
-    LOG_LEVEL: str = Field("INFO", description="Log level for the application (e.g., DEBUG, INFO, WARNING, ERROR)")
-    GCZ_CONFIG_PATH: Optional[str] = Field(None, description="Optional: Path to a specific YAML configuration file.")
-    DEFAULT_MODEL: str = Field("llama3:latest", description="The default model to be used by agents.")
+# --- Configuration Models ---
 
-    # --- Ollama / Local LLMs ---
-    OLLAMA_HOST: str = Field("http://localhost:11434", description="The full URL of your Ollama server.")
+class PhoneConfig(BaseModel):
+    sip_server: str
+    sip_user: str
+    audio_input_device: Optional[str] = None
+    audio_output_device: Optional[str] = None
+    vad_threshold: float = Field(0.5, ge=0, le=1)
 
-    # --- ComfyUI / Stable Diffusion Service ---
-    COMFYUI_URL: str = Field("127.0.0.1:8188", description="The address and port of the ComfyUI API.")
-    COMFYUI_PATH: Optional[str] = Field(None, description="Optional: Absolute path to your ComfyUI installation.")
-    DISABLE_COMFYUI_MANAGER_FRONT: bool = Field(False, description="Optional: Set to true to disable the ComfyUI-Manager frontend.")
+class EmailConfig(BaseModel):
+    confirm_before_send: bool = True
+    gmail: dict
+    icloud: dict
 
-    # --- Email Service ---
-    EMAIL_USER: Optional[str] = Field(None, alias="GMAIL_USER")
-    EMAIL_PASS: Optional[str] = Field(None, alias="GMAIL_PASS")
-    IMAP_HOST: Optional[str] = Field(None, alias="GMAIL_IMAP_HOST")
-    SMTP_HOST: Optional[str] = Field(None, alias="GMAIL_SMTP_HOST")
-    SMTP_PORT: int = Field(587)
+class AvatarConfig(BaseModel):
+    sadtalker_checkpoints: Path
+    esrgan_model_path: Path
+    fps: int = Field(25, gt=0)
+    bitrate: str = "5000k"
 
-    # --- External APIs & Services ---
-    OPENAI_API_KEY: Optional[str] = Field(None)
-    GITHUB_TOKEN: Optional[str] = Field(None)
-    IG_USERNAME: Optional[str] = Field(None)
-    IG_PASSWORD: Optional[str] = Field(None)
-    YOUTUBE_CLIENT_SECRETS_FILE: Optional[str] = Field(None)
-
-    # --- Hardware & Performance ---
-    CUDA_VISIBLE_DEVICES: Optional[str] = Field(None)
-    PATH_FFMPEG: str = Field("ffmpeg", description="Path to the ffmpeg executable.")
-
-    # --- Media & Artifact Handling ---
-    SAVE_MEDIA_LOCALLY: bool = Field(True)
-    TELEGRAM_SEND_IMAGES: bool = Field(True)
-    TELEGRAM_SEND_VIDEOS: bool = Field(True)
-
-# --- YAML-based Configuration Models ---
+class SDConfig(BaseModel):
+    use_directml: bool = True
+    base_models_path: Path
+    workflows_path: Path
 
 class RoutingConfig(BaseModel):
     llm_planner: str
@@ -71,63 +55,81 @@ class RoutingConfig(BaseModel):
     sd_port: int
 
 class TelegramConfig(BaseModel):
+    bot_token: str = Field(..., env="TELEGRAM_BOT_TOKEN")
     admin_ids: List[int]
 
-# --- Main Config Object ---
+class SocialConfig(BaseModel):
+    instagram_username: str = Field(..., env="IG_USERNAME")
+    instagram_password: str = Field(..., env="IG_PASSWORD")
+    youtube_client_secrets_file: FilePath = Field(..., env="YOUTUBE_CLIENT_SECRETS_FILE")
 
-class Config:
+class ToolEndpointConfig(BaseModel):
+    name: str
+    method: str
+    base_url: Optional[str] = None
+    path: Optional[str] = None
+    timeout_s: int = 60
+    module: Optional[str] = None
+    function: Optional[str] = None
+
+class ToolsConfig(BaseModel):
+    tool_endpoints: List[ToolEndpointConfig]
+
+
+# --- Loading Logic ---
+
+def load_yaml(name: str) -> dict:
+    """Loads a YAML configuration file from the configs directory."""
+    config_path = BASE_DIR / 'configs' / f'{name}.yml'
+    if not config_path.exists():
+        raise FileNotFoundError(f"Configuration file '{name}.yml' not found in {config_path.parent}")
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
+
+def load_config(name: str, model: BaseModel) -> BaseModel:
+    """Loads a YAML file and validates it with the given Pydantic model."""
+    data = load_yaml(name)
+    return model.model_validate(data)
+
+# --- Example Usage (can be removed) ---
+if __name__ == "__main__":
+    try:
+        telegram_conf = TelegramConfig.model_validate(load_yaml('telegram'))
+        print("Telegram Config Loaded:")
+        print(telegram_conf)
+
+        routing_conf = load_config('routing', RoutingConfig)
+        print("\nRouting Config Loaded:")
+        print(routing_conf)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+# --- Global Settings Provider ---
+from types import SimpleNamespace
+
+def get_settings():
     """
-    A unified configuration object.
+    Loads all configurations and returns them as a single settings object.
+    This is a compatibility function to support legacy code that expects
+    a single settings object.
     """
-    def __init__(self):
-        try:
-            self.app = AppSettings()
-        except ValidationError as e:
-            missing_vars = [err['loc'][0] for err in e.errors() if 'value_error.missing' in str(err['msg'])]
-            if missing_vars:
-                logger.critical(
-                    "FATAL: Missing required environment variables.\n"
-                    "Please copy '.env.template' to '.env' and fill in the following values:\n"
-                    f"{', '.join(v for v in missing_vars)}"
-                )
-                exit(1)
-            else:
-                logger.critical(f"FATAL: Configuration validation error: {e}")
-                exit(1)
+    settings = SimpleNamespace()
 
-        self.routing: RoutingConfig = self._load_yaml('routing', RoutingConfig)
-        self.telegram: TelegramConfig = self._load_yaml('telegram', TelegramConfig)
+    # Load YAML-based configs
+    try:
+        settings.phone = load_config('phone', PhoneConfig)
+        settings.email = load_config('email', EmailConfig)
+        settings.avatar = load_config('avatar', AvatarConfig)
+        settings.sd = load_config('sd', SDConfig)
+        settings.routing = load_config('routing', RoutingConfig)
+        settings.telegram = load_config('telegram', TelegramConfig)
+    except FileNotFoundError as e:
+        print(f"Warning: Could not load a config file: {e}. Some features may not work.")
 
-    def _load_yaml(self, name: str, model: BaseModel) -> BaseModel:
-        """Loads a YAML file and validates it with the given Pydantic model."""
-        config_path = BASE_DIR / 'configs' / f'{name}.yml'
-        if not config_path.exists():
-            raise FileNotFoundError(f"Configuration file '{name}.yml' not found in {config_path.parent}")
-        with open(config_path, 'r') as f:
-            data = yaml.safe_load(f)
-        return model.model_validate(data)
+    # Load environment-based settings from core.env
+    from core import env
+    settings.app = env
 
-# --- Global Config Instance ---
-_settings_instance = None
-
-def get_settings() -> Config:
-    """
-    Returns a singleton instance of the Config object.
-    This function controls when the settings are loaded and validated,
-    making the application more testable.
-    """
-    global _settings_instance
-    if _settings_instance is None:
-        try:
-            _settings_instance = Config()
-        except FileNotFoundError as e:
-            logger.critical(f"FATAL: Could not load configuration. {e}")
-            exit(1)
-        except Exception as e:
-            logger.critical(f"An unexpected error occurred during configuration loading: {e}")
-            exit(1)
-    return _settings_instance
-
-# The settings object should be retrieved by calling get_settings() in the
-# application modules. This prevents the settings from being loaded and
-# validated when the module is imported by tests.
+    return settings

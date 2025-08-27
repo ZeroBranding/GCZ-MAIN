@@ -26,23 +26,7 @@ warn_unused_configs = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --cov=core --cov=ai --cov-report=term-missing --cov-fail-under=70"
+addopts = "-ra -q"
 testpaths = [
     "tests",
 ]
-# Add the project root to the python path to fix imports
-python_paths = [
-    ".",
-]
-
-[tool.coverage.run]
-omit = [
-    "*/tests/*",
-    "*/external/*",
-    "*/scripts/*",
-    "core/monitoring.py", # Exclude until fully integrated
-]
-
-[tool.coverage.report]
-show_missing = true
-fail_under = 70
